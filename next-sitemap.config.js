@@ -30,7 +30,7 @@ module.exports = {
       '/privacy-policy',
       '/blog',
 
-      // Dynamic routes for each category
+      // Dynamic routes for each category (stock, commodity, currency, real estate, index, bond)
       // Stocks
       '/stock',
       '/stock/aapl-vs-btc',
