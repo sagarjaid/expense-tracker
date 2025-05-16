@@ -29,6 +29,7 @@ export const metadata = getSEOTags({
   canonicalUrlRelative: '/',
   extraTags: {
     'google-site-verification': 'bpVto528QOEsbHsk4o2dP8yL3DMcQb6kFWjoQUgSoq0',
+    'google-adsense-account': 'ca-pub-8500986101092156',
   },
 });
 

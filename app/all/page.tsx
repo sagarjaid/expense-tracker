@@ -7,7 +7,7 @@ import Header from '@/components/Header';
 import { useMemo, useState } from 'react';
 import Navbar from '@/components/Navbar';
 import { usePathname } from 'next/navigation';
-import Link from 'next/link';
+import AssetCard from '@/components/AssetCard';
 import { assetData } from '@/app/all/assetData';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { cn } from '@/lib/utils';
@@ -18,34 +18,6 @@ interface Asset {
   name: string;
   symbol: string;
   category: string;
-}
-
-interface AssetCardProps {
-  asset: Asset;
-}
-
-function AssetCard({ asset }: AssetCardProps) {
-  const getAssetUrl = (asset: Asset) => {
-    const symbol = asset.symbol.toLowerCase();
-    switch (asset.category) {
-      case 'currency':
-        return `/${asset.category}/${symbol}`;
-      default:
-        return `/${asset.category}/${symbol}-vs-btc`;
-    }
-  };
-
-  return (
-    <Link
-      href={getAssetUrl(asset)}
-      className='p-4 border rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-pointer hover:bg-muted/50 block'>
-      <div className='font-semibold text-foreground'>{asset.name}</div>
-      <div className='text-sm text-muted-foreground'>{asset.symbol}</div>
-      <div className='text-xs text-muted-foreground/70 mt-1'>
-        {asset.category}
-      </div>
-    </Link>
-  );
 }
 
 function AssetGrid() {
@@ -138,7 +110,9 @@ function AssetGrid() {
         {filteredAssets.map((asset) => (
           <AssetCard
             key={asset.symbol}
-            asset={asset}
+            name={asset.name}
+            symbol={asset.symbol}
+            category={asset.category}
           />
         ))}
       </div>

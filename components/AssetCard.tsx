@@ -128,11 +128,11 @@ const AssetCard = ({ name, symbol, category }: AssetCardProps) => {
         </div>
       ) : assetData ? (
         <div className='mt-2'>
-          <div className='text-[10px] font-semibold'>
+          <div className='text-xs font-semibold'>
             {assetData.currentPrice.toFixed(5)}
           </div>
           <div
-            className={`text-[8px] ${
+            className={`text-xs ${
               assetData.oneDayChange >= 0 ? 'text-green-500' : 'text-red-500'
             }`}>
             {assetData.oneDayChange >= 0 ? '+' : ''}
@@ -140,7 +140,7 @@ const AssetCard = ({ name, symbol, category }: AssetCardProps) => {
           </div>
         </div>
       ) : (
-        <div className='text-[10px] text-muted-foreground/70 mt-2'>No data</div>
+        <div className='text-xs text-muted-foreground/70 mt-2'>No data</div>
       )}
     </Link>
   );

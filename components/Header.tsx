@@ -81,7 +81,7 @@ const Header = () => {
             <Link
               href='/all'
               className='text-sm font-semibold leading-6 text-foreground hover:text-muted-foreground transition-colors'>
-              All Asset Links
+              Assets
             </Link>
             <Link
               href='/blog'
@@ -170,7 +170,7 @@ const Header = () => {
                 <Link
                   href='/all'
                   className='text-sm font-semibold leading-6 text-foreground hover:text-muted-foreground transition-colors'>
-                  All Asset Links
+                  Assets
                 </Link>
                 <Link
                   href='/blog'

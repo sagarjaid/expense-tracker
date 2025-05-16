@@ -44,7 +44,7 @@ const Footer = () => {
                   Stocks
                 </Link>
                 <Link
-                  href='/commodity/gld-vs-btc'
+                  href='/commodity'
                   className='text-sm  leading-6 text-foreground/80 hover:text-foreground transition-colors'>
                   Commodities
                 </Link>

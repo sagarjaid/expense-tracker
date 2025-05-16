@@ -112,13 +112,6 @@ const NavbarMobile = () => {
             className='link link-hover'>
             Support
           </Link>
-
-          <Link
-            href='https://sagarjaid.com/'
-            target='_blank'
-            className='link link-hover'>
-            Build by Sagar Jaid
-          </Link>
         </div>
       </div>
     </div>

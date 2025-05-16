@@ -252,13 +252,6 @@ const Navbar = () => {
             className='text-muted-foreground hover:text-foreground transition-colors'>
             Support
           </Link>
-
-          <Link
-            href='https://sagarjaid.com/'
-            target='_blank'
-            className='text-muted-foreground hover:text-foreground transition-colors'>
-            Build by Sagar Jaid
-          </Link>
         </div>
       </div>
     </div>
