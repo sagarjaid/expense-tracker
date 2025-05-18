@@ -4,13 +4,28 @@
 
 import Typewriter from 'typewriter-effect';
 import Image from 'next/image';
-import hero from '@/app/hero.png';
+import herob from '@/app/icons/hero-b.png';
+import herow from '@/app/icons/hero-w.png';
 import { AssetSearch } from './asset-search-home';
 import AssetCard from './AssetCard';
+import { useTheme } from 'next-themes';
+import { useState, useEffect } from 'react';
 
 const Headline = () => {
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Prevent flash of wrong theme
+  if (!mounted) {
+    return null;
+  }
+
   return (
-    <div className='relative md:h-screen flex flex-col md:flex-row gap-6 md:gap-2 w-full justify-between md:items-start my-20 md:mt-8 md:my-0  mx-auto p-6 overflow-hidden'>
+    <div className='relative md:h-screen flex flex-col md:flex-row gap-6 md:gap-2 w-full justify-between md:items-start my-20 md:mt-16 md:my-0  mx-auto p-6 md:overflow-hidden'>
       <div className='flex flex-col items-center md:items-start gap-4 md:w-1/2 relative md:mt-28 z-10 md:pl-20'>
         {/* <button className='relative flex w-fit items-center px-2.5 py-0.5 font-semibold border text-xs sdm:text-base rounded-lg'>
           LIVE
@@ -64,30 +79,14 @@ const Headline = () => {
       </div>
 
       <div className='hidden md:block absolute right-0 top-80 -translate-y-1/2 w-1/2  overflow-hidden'>
-        <div className='relative w-full'>
-          <div className='flex flex-col transform translate-x-[14%]'>
-            <div className='bg-gray-100 rounded-l-2xl rounded-bl-none p-2 flex items-center gap-2 border border-gray-200'>
-              <div className='flex gap-1.5'>
-                <div className='w-3 h-3 rounded-full bg-red-500'></div>
-                <div className='w-3 h-3 rounded-full bg-yellow-500'></div>
-                <div className='w-3 h-3 rounded-full bg-green-500'></div>
-              </div>
-              <div className='flex-1 bg-white rounded-md h-6 flex items-center px-3 text-sm text-gray-500'>
-                basedinbitcoin.com
-              </div>
-            </div>
-            <div className='relative -ml-[-0.1px] box-border'>
-              <Image
-                src={hero}
-                alt='Product Demo'
-                className='h-[500px] w-auto object-cover object-left rounded-tl-none rounded-l-2xl shadow-xl border border-gray-500 border-1.5 border-t-0 border-r-0 box-border'
-                priority={true}
-                width={2000}
-                height={2000}
-              />
-            </div>
-          </div>
-        </div>
+        <Image
+          src={resolvedTheme === 'dark' ? herob : herow}
+          alt='Product Demo'
+          className='hidden md:block h-[650px] w-auto object-cover object-left'
+          priority={true}
+          width={2000}
+          height={2000}
+        />
       </div>
     </div>
   );

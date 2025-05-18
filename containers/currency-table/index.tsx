@@ -256,38 +256,38 @@ export default function CurrencyTable({
             </th>
             <th
               scope='col'
-              className='px-0 py-4'>
+              className='p-4 whitespace-nowrap'>
               Currency
             </th>
             <th
               scope='col'
-              className='px-0 py-4'>
+              className='p-4 whitespace-nowrap'>
               Last Price
             </th>
             <th
               scope='col'
-              className='px-0 py-4'>
-              24h %
+              className='p-4 whitespace-nowrap'>
+              24h
             </th>
             <th
               scope='col'
-              className='px-0 py-4'>
-              7Day %
+              className='p-4 whitespace-nowrap'>
+              7Day
             </th>
             <th
               scope='col'
-              className='px-0 py-4'>
-              30Day %
+              className='p-4 whitespace-nowrap'>
+              30Day
             </th>
             <th
               scope='col'
-              className='px-0 py-4'>
-              90Day %
+              className='p-4 whitespace-nowrap'>
+              90Day
             </th>
             <th
               scope='col'
-              className='pr-4 py-4'>
-              1Year %
+              className='p-4 whitespace-nowrap'>
+              1Year
             </th>
           </tr>
         </thead>
@@ -297,14 +297,14 @@ export default function CurrencyTable({
               key={item.symbol}
               className='border-border bg-background border-b hover:bg-accent/50'>
               <td className='p-4'>{item.rank}</td>
-              <td className='px-0 py-4'>
+              <td className='p-4 whitespace-nowrap'>
                 <Link
                   href={`${path}/${item.symbol.toLowerCase()}-vs-btc`}
                   className='text-foreground hover:text-primary transition-colors'>
                   {item.name}
                 </Link>
               </td>
-              <td className='px-0 py-4'>
+              <td className='p-4 whitespace-nowrap'>
                 <Link
                   href={`${path}/${item.symbol.toLowerCase()}-vs-btc`}
                   className='text-foreground hover:text-primary transition-colors'>
@@ -312,7 +312,7 @@ export default function CurrencyTable({
                 </Link>
               </td>
               <td
-                className={`px-0 py-4 ${
+                className={`p-4 whitespace-nowrap ${
                   item.c / item.o > 1 ? 'text-green-500' : 'text-red-500'
                 }`}>
                 <Link
@@ -322,7 +322,7 @@ export default function CurrencyTable({
                 </Link>
               </td>
               <td
-                className={`px-0 py-4 ${
+                className={`p-4 whitespace-nowrap ${
                   item.c / item.sevenDayChange > 1
                     ? 'text-green-500'
                     : 'text-red-500'
@@ -334,7 +334,7 @@ export default function CurrencyTable({
                 </Link>
               </td>
               <td
-                className={`px-0 py-4 ${
+                className={`p-4 whitespace-nowrap ${
                   item.c / item.thirtyDayChange > 1
                     ? 'text-green-500'
                     : 'text-red-500'
@@ -346,7 +346,7 @@ export default function CurrencyTable({
                 </Link>
               </td>
               <td
-                className={`px-0 py-4 ${
+                className={`p-4 whitespace-nowrap ${
                   item.c / item.ninetyDayChange > 1
                     ? 'text-green-500'
                     : 'text-red-500'
@@ -358,7 +358,7 @@ export default function CurrencyTable({
                 </Link>
               </td>
               <td
-                className={`pr-4 py-4 ${
+                className={`p-4 whitespace-nowrap ${
                   item.c / item.yearDayChange > 1
                     ? 'text-green-500'
                     : 'text-red-500'

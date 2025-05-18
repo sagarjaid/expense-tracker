@@ -3,36 +3,57 @@
 
 import Image from 'next/image';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 // Import chart images
-import stocksChart from '@/app/icons/stocks-chart.png';
-import commoditiesChart from '@/app/icons/commodities-chart.png';
-import currenciesChart from '@/app/icons/currencies-chart.png';
-import realEstateChart from '@/app/icons/real-estate-chart.png';
-import indicesChart from '@/app/icons/indices-chart.png';
-import bondsChart from '@/app/icons/bonds-chart.png';
+import stocksChartw from '@/app/icons/stocks-chart-w.png';
+import stocksChartb from '@/app/icons/stocks-chart-b.png';
+import commoditiesChartw from '@/app/icons/commodities-chart-w.png';
+import commoditiesChartb from '@/app/icons/commodities-chart-b.png';
+import currenciesChartw from '@/app/icons/currencies-chart-w.png';
+import currenciesChartb from '@/app/icons/currencies-chart-b.png';
+import realEstateChartw from '@/app/icons/real-estate-chart-w.png';
+import realEstateChartb from '@/app/icons/real-estate-chart-b.png';
+import indicesChartw from '@/app/icons/indices-chart-w.png';
+import indicesChartb from '@/app/icons/indices-chart-b.png';
+import bondsChartw from '@/app/icons/bonds-chart-w.png';
+import bondsChartb from '@/app/icons/bonds-chart-b.png';
+
 import Link from 'next/link';
+import { useTheme } from 'next-themes';
 
 const Copy = () => {
   const [selectedTab, setSelectedTab] = useState('Stocks');
 
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Prevent flash of wrong theme
+  if (!mounted) {
+    return null;
+  }
+
   const getImageForTab = (tab: string) => {
+    const isDark = resolvedTheme === 'dark';
     switch (tab) {
       case 'Stocks':
-        return stocksChart;
+        return isDark ? stocksChartb : stocksChartw;
       case 'Commodities':
-        return commoditiesChart;
+        return isDark ? commoditiesChartb : commoditiesChartw;
       case 'Currencies':
-        return currenciesChart;
+        return isDark ? currenciesChartb : currenciesChartw;
       case 'Real Estate':
-        return realEstateChart;
+        return isDark ? realEstateChartb : realEstateChartw;
       case 'Indices':
-        return indicesChart;
+        return isDark ? indicesChartb : indicesChartw;
       case 'Bonds':
-        return bondsChart;
+        return isDark ? bondsChartb : bondsChartw;
       default:
-        return stocksChart;
+        return isDark ? stocksChartb : stocksChartw;
     }
   };
 
@@ -109,10 +130,10 @@ const Copy = () => {
       <Image
         src={getImageForTab(selectedTab)}
         alt={`${selectedTab} Chart Demo`}
-        className='w-11/12 md:w-2/3 rounded-lg shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-500'
+        className='w-11/12 md:w-2/3 rounded-lg shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-gray-200'
         priority={true}
-        width={500}
-        height={500}
+        width={1000}
+        height={1000}
       />
 
       <Link

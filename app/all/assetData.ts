@@ -48,14 +48,14 @@ export const assetData = {
   ] as AssetItem[],
 
   currencyList: [
-    { symbol: 'BTCUSD', name: 'USD / BTC' },
-    { symbol: 'BTCAUD', name: 'AUD / BTC' },
-    { symbol: 'BTCEUR', name: 'EUR / BTC' },
-    { symbol: 'BTCGBP', name: 'GBP / BTC' },
-    { symbol: 'BTCJPY', name: 'JPY / BTC' },
-    { symbol: 'ETHBTC', name: 'ETH / BTC' },
-    { symbol: 'LTCBTC', name: 'LTC / BTC' },
-    { symbol: 'XRPBTC', name: 'XRP / BTC' },
+    { symbol: 'USD', name: 'US Dollar' },
+    { symbol: 'AUD', name: 'Australian Dollar' },
+    { symbol: 'EUR', name: 'Euro' },
+    { symbol: 'GBP', name: 'British Pound' },
+    { symbol: 'JPY', name: 'Japanese Yen' },
+    { symbol: 'ETH', name: 'Ethereum' },
+    { symbol: 'LTC', name: 'Litecoin' },
+    { symbol: 'XRP', name: 'XRP' },
   ] as AssetItem[],
 
   estateList: [

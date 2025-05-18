@@ -146,43 +146,43 @@ const StocksTable = ({ stocksList = [], path }) => {
           <tr className='border-border border-b'>
             <th
               scope='col'
-              className='p-4'>
+              className='p-4 whitespace-nowrap'>
               Rank
             </th>
             <th
               scope='col'
-              className='px-0 py-4'>
+              className=' p-4 whitespace-nowrap'>
               Instrument
             </th>
             <th
               scope='col'
-              className='px-0 py-4'>
+              className=' p-4 whitespace-nowrap'>
               Last Price
             </th>
             <th
               scope='col'
-              className='px-0 py-4'>
-              24h %
+              className=' p-4 whitespace-nowrap'>
+              24h
             </th>
             <th
               scope='col'
-              className='px-0 py-4'>
-              7Day %
+              className=' p-4 whitespace-nowrap'>
+              7Day
             </th>
             <th
               scope='col'
-              className='px-0 py-4'>
-              30Day %
+              className=' p-4 whitespace-nowrap'>
+              30Day
             </th>
             <th
               scope='col'
-              className='px-0 py-4'>
-              90Day %
+              className=' p-4 whitespace-nowrap'>
+              90Day
             </th>
             <th
               scope='col'
-              className='pr-4 py-4'>
-              1Year %
+              className='p-4 whitespace-nowrap'>
+              1Year
             </th>
           </tr>
         </thead>
@@ -193,14 +193,14 @@ const StocksTable = ({ stocksList = [], path }) => {
                 key={idx}
                 className='border-border bg-background border-b hover:bg-accent/50'>
                 <td className='p-4'>{item.rank}</td>
-                <td className='px-0 py-4'>
+                <td className='p-4 whitespace-nowrap'>
                   <Link
                     href={`${path}/${item.symbol.toLowerCase()}-vs-btc`}
                     className='text-foreground hover:text-primary transition-colors'>
                     {getNameBySymbol(item.symbol)} / BTC
                   </Link>
                 </td>
-                <td className='px-0 py-4'>
+                <td className='p-4 whitespace-nowrap'>
                   <Link
                     href={`${path}/${item.symbol.toLowerCase()}-vs-btc`}
                     className='text-foreground hover:text-primary transition-colors'>
@@ -208,7 +208,7 @@ const StocksTable = ({ stocksList = [], path }) => {
                   </Link>
                 </td>
                 <td
-                  className={`px-0 py-4 ${
+                  className={`p-4 whitespace-nowrap ${
                     item.c / item.o > 1 ? 'text-green-500' : 'text-red-500'
                   }`}>
                   <Link
@@ -218,7 +218,7 @@ const StocksTable = ({ stocksList = [], path }) => {
                   </Link>
                 </td>
                 <td
-                  className={`px-0 py-4 ${
+                  className={`p-4 whitespace-nowrap ${
                     item.c /
                       (item.o / item.ratio) /
                       sevenDaySingleStockData(item.symbol) >
@@ -240,7 +240,7 @@ const StocksTable = ({ stocksList = [], path }) => {
                   </Link>
                 </td>
                 <td
-                  className={`px-0 py-4 ${
+                  className={`p-4 whitespace-nowrap ${
                     item.c /
                       (item.o / item.ratio) /
                       thirtyDaySingleStockData(item.symbol) >
@@ -262,7 +262,7 @@ const StocksTable = ({ stocksList = [], path }) => {
                   </Link>
                 </td>
                 <td
-                  className={`px-0 py-4 ${
+                  className={`p-4 whitespace-nowrap ${
                     item.c /
                       (item.o / item.ratio) /
                       ninetyDaySingleStockData(item.symbol) >
@@ -284,7 +284,7 @@ const StocksTable = ({ stocksList = [], path }) => {
                   </Link>
                 </td>
                 <td
-                  className={`pr-4 py-4 ${
+                  className={`p-4 whitespace-nowrap ${
                     item.c /
                       (item.o / item.ratio) /
                       yearDaySingleStockData(item.symbol) >

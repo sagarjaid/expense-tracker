@@ -2,23 +2,23 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useSearchParams, usePathname } from 'next/navigation';
 import { useTheme } from 'next-themes';
-import config from '@/config';
 import { Button } from '@/components/ui/button-2';
 import { AssetSearch } from './asset-search';
 import Logo from './Logo';
-import ButtonAccount from './ButtonAccount';
 import ButtonLogin from './ButtonLogin';
 
 const Header = () => {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [isSearchOpen, setIsSearchOpen] = useState<boolean>(false);
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -31,6 +31,21 @@ const Header = () => {
   useEffect(() => {
     setIsOpen(false);
   }, [searchParams]);
+
+  // Focus search input when search popup opens
+  useEffect(() => {
+    if (isSearchOpen && searchRef.current) {
+      searchRef.current.focus();
+    }
+  }, [isSearchOpen]);
+
+  const handleSearchClick = () => {
+    setIsSearchOpen(true);
+    // Force the search popup to open by triggering a click on the input
+    if (searchRef.current) {
+      searchRef.current.click();
+    }
+  };
 
   // Prevent flash of wrong theme
   if (!mounted) {
@@ -46,6 +61,28 @@ const Header = () => {
           <Logo priority={true} />
         </div>
         <div className='flex lg:hidden'>
+          {pathname !== '/' && (
+            <Button
+              variant='ghost'
+              size='icon'
+              onClick={handleSearchClick}>
+              <span className='sr-only'>Open search</span>
+              <svg
+                fill='none'
+                strokeWidth={1.8}
+                stroke='currentColor'
+                className='w-5 h-5'
+                viewBox='0 0 24 24'
+                xmlns='http://www.w3.org/2000/svg'
+                aria-hidden='true'>
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  d='m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z'
+                />
+              </svg>
+            </Button>
+          )}
           <Button
             variant='ghost'
             size='icon'
@@ -72,7 +109,7 @@ const Header = () => {
         </div>
 
         <div className='hidden items-center lg:flex lg:flex-1 lg:justify-end lg:gap-x-4'>
-          <div className='hidden lg:flex lg:gap-x-6'>
+          <div className='hidden lg:flex lg:gap-x-4'>
             <Link
               href='/'
               className='text-sm font-semibold leading-6 text-foreground hover:text-muted-foreground transition-colors'>
@@ -80,7 +117,7 @@ const Header = () => {
             </Link>
             <Link
               href='/all'
-              className='text-sm font-semibold leading-6 text-foreground hover:text-muted-foreground transition-colors'>
+              className='text-sm font-semibold leading-6  text-foreground hover:text-muted-foreground transition-colors'>
               Assets
             </Link>
             <Link
@@ -223,6 +260,41 @@ const Header = () => {
                 <ButtonLogin />
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile Search Popup */}
+      <div
+        className={`lg:hidden ${
+          isSearchOpen ? 'fixed inset-0 z-50' : 'hidden'
+        }`}>
+        <div className='fixed inset-0 bg-background/80 backdrop-blur-sm' />
+        <div className='fixed inset-0 z-50 overflow-y-auto bg-background'>
+          <div className='p-4'>
+            <div className='flex items-center justify-between mb-4'>
+              <Logo priority={true} />
+              <Button
+                variant='ghost'
+                size='icon'
+                onClick={() => setIsSearchOpen(false)}>
+                <span className='sr-only'>Close search</span>
+                <svg
+                  xmlns='http://www.w3.org/2000/svg'
+                  fill='none'
+                  viewBox='0 0 24 24'
+                  strokeWidth={1.5}
+                  stroke='currentColor'
+                  className='w-6 h-6'>
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    d='M6 18L18 6M6 6l12 12'
+                  />
+                </svg>
+              </Button>
+            </div>
+            <AssetSearch ref={searchRef} />
           </div>
         </div>
       </div>

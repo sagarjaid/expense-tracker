@@ -22,14 +22,14 @@ export default function CurrencyPageClient({ currency }: CurrencyPageProps) {
 
   const currencyList = useMemo(
     () => [
-      { symbol: 'BTCUSD', name: 'USD / BTC' },
-      { symbol: 'BTCAUD', name: 'AUD / BTC' },
-      { symbol: 'BTCEUR', name: 'EUR / BTC' },
-      { symbol: 'BTCGBP', name: 'GBP / BTC' },
-      { symbol: 'BTCJPY', name: 'JPY / BTC' },
-      { symbol: 'ETHBTC', name: 'ETH / BTC' },
-      { symbol: 'LTCBTC', name: 'LTC / BTC' },
-      { symbol: 'XRPBTC', name: 'XRP / BTC' },
+      { symbol: 'BTCUSD', name: 'US Dollar' },
+      { symbol: 'BTCAUD', name: 'Australian Dollar' },
+      { symbol: 'BTCEUR', name: 'Euro' },
+      { symbol: 'BTCGBP', name: 'British Pound' },
+      { symbol: 'BTCJPY', name: 'Japanese Yen' },
+      { symbol: 'ETHBTC', name: 'Ethereum' },
+      { symbol: 'LTCBTC', name: 'Litecoin' },
+      { symbol: 'XRPBTC', name: 'XRP' },
     ],
     []
   );
@@ -54,7 +54,7 @@ export default function CurrencyPageClient({ currency }: CurrencyPageProps) {
                   page='currency'
                   stocksList={currencyList}
                   initialStockTicker={currencySymbol}
-                  initialTitle={currencyName}
+                  initialTitle={currencyName + ' / BTC'}
                   TopTitle='Currency: '
                   selectedTimespan='day'
                 />

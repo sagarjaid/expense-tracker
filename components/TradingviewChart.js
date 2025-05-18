@@ -215,6 +215,8 @@ const ChartComponent = ({
     URL.revokeObjectURL(url);
   };
 
+  console.log({ TopTitle, retitle }, 'TopTitle + retitle');
+
   return (
     <div className='flex flex-col gap-2 overflow-hidden'>
       <div className='flex gap-4 mb-5 justify-between lg:flex-row flex-col items-start md:items-center'>

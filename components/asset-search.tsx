@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, forwardRef } from 'react';
 import { Search, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -52,14 +52,14 @@ const commodityList = [
 ];
 
 const currencyList = [
-  { symbol: 'BTCUSD', name: 'USD / BTC' },
-  { symbol: 'BTCAUD', name: 'AUD / BTC' },
-  { symbol: 'BTCEUR', name: 'EUR / BTC' },
-  { symbol: 'BTCGBP', name: 'GBP / BTC' },
-  { symbol: 'BTCJPY', name: 'JPY / BTC' },
-  { symbol: 'ETHBTC', name: 'ETH / BTC' },
-  { symbol: 'LTCBTC', name: 'LTC / BTC' },
-  { symbol: 'XRPBTC', name: 'XRP / BTC' },
+  { symbol: 'USD', name: 'US Dollar' },
+  { symbol: 'AUD', name: 'Australian Dollar' },
+  { symbol: 'EUR', name: 'Euro' },
+  { symbol: 'GBP', name: 'British Pound' },
+  { symbol: 'JPY', name: 'Japanese Yen' },
+  { symbol: 'ETH', name: 'Ethereum' },
+  { symbol: 'LTC', name: 'Litecoin' },
+  { symbol: 'XRP', name: 'XRP' },
 ];
 
 const estateList = [
@@ -115,13 +115,12 @@ const categories: AssetCategory[] = [
   { name: 'Bonds', assets: bondsList },
 ];
 
-export function AssetSearch() {
+export const AssetSearch = forwardRef<HTMLInputElement>((props, ref) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
   const [filteredAssets, setFilteredAssets] = useState<Asset[]>([]);
   const popupRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   // Handle outside click to close popup
   useEffect(() => {
@@ -178,20 +177,12 @@ export function AssetSearch() {
     }
   };
 
-  // Focus input when popup opens
-  useEffect(() => {
-    if (isOpen && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [isOpen]);
-
   return (
     <div className='relative w-full max-w-xl'>
       {/* Search Input */}
-
       <div className='relative'>
         <Input
-          ref={inputRef}
+          ref={ref}
           type='text'
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
@@ -315,4 +306,6 @@ export function AssetSearch() {
       )}
     </div>
   );
-}
+});
+
+AssetSearch.displayName = 'AssetSearch';

@@ -27,13 +27,13 @@ export default function Home() {
 
   const currencyList = useMemo(
     () => [
-      { symbol: 'ETHBTC', name: 'ETH / BTC' },
-      { symbol: 'BTCUSD', name: 'USD / BTC' },
-      { symbol: 'BTCAUD', name: 'AUD / BTC' },
-      { symbol: 'BTCEUR', name: 'EUR / BTC' },
-      { symbol: 'BTCGBP', name: 'GBP / BTC' },
-      { symbol: 'BTCJPY', name: 'JPY / BTC' },
-      { symbol: 'LTCBTC', name: 'LTC / BTC' },
+      { symbol: 'ETHBTC', name: 'Ethereum / BTC' },
+      { symbol: 'BTCUSD', name: 'US Dollar / BTC' },
+      { symbol: 'BTCAUD', name: 'Australian Dollar / BTC' },
+      { symbol: 'BTCEUR', name: 'Euro / BTC' },
+      { symbol: 'BTCGBP', name: 'British Pound / BTC' },
+      { symbol: 'BTCJPY', name: 'Japanese Yen / BTC' },
+      { symbol: 'LTCBTC', name: 'Litecoin / BTC' },
       { symbol: 'XRPBTC', name: 'XRP / BTC' },
     ],
     []
