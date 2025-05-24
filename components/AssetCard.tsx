@@ -21,6 +21,7 @@ interface AssetData {
 const AssetCard = ({ name, symbol, category }: AssetCardProps) => {
   const [assetData, setAssetData] = useState<AssetData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasNoData, setHasNoData] = useState(false);
   const API_URL = 'https://api.polygon.io/v2/aggs/ticker/';
   const API_KEY = process.env.NEXT_PUBLIC_API_KEY;
 
@@ -81,6 +82,7 @@ const AssetCard = ({ name, symbol, category }: AssetCardProps) => {
             currentPrice: currentRatio,
             oneDayChange,
           });
+          setIsLoading(false);
         } else {
           // If no data found, try previous day
           if (daysAgo < 5) {
@@ -89,6 +91,9 @@ const AssetCard = ({ name, symbol, category }: AssetCardProps) => {
               `No data found for ${currentDate}, retrying previous day...`
             );
             return fetchAssetData(daysAgo + 1);
+          } else {
+            setHasNoData(true);
+            setIsLoading(false);
           }
         }
       } catch (error) {
@@ -100,9 +105,10 @@ const AssetCard = ({ name, symbol, category }: AssetCardProps) => {
             `Error fetching data for ${symbol}, retrying previous day...`
           );
           return fetchAssetData(daysAgo + 1);
+        } else {
+          setHasNoData(true);
+          setIsLoading(false);
         }
-      } finally {
-        setIsLoading(false);
       }
     };
 
@@ -122,26 +128,28 @@ const AssetCard = ({ name, symbol, category }: AssetCardProps) => {
         {symbol} vs BTC
       </div>
 
-      {isLoading ? (
-        <div className='text-[10px] text-muted-foreground/70 mt-2'>
-          Loading...
-        </div>
-      ) : assetData ? (
-        <div className='mt-2'>
-          <div className='text-xs font-semibold'>
-            {assetData.currentPrice.toFixed(5)}
-          </div>
-          <div
-            className={`text-xs ${
-              assetData.oneDayChange >= 0 ? 'text-green-500' : 'text-red-500'
-            }`}>
-            {assetData.oneDayChange >= 0 ? '+' : ''}
-            {assetData.oneDayChange.toFixed(2)}%
-          </div>
-        </div>
-      ) : (
-        <div className='text-xs text-muted-foreground/70 mt-2'>No data</div>
-      )}
+      <div className='mt-2 min-h-[40px]'>
+        {isLoading ? (
+          <div className='text-[10px] text-muted-foreground/70'>Loading...</div>
+        ) : hasNoData ? (
+          <div className='text-xs text-muted-foreground/70'>No data</div>
+        ) : assetData ? (
+          <>
+            <div className='text-xs font-semibold'>
+              {assetData.currentPrice.toFixed(5)}
+            </div>
+            <div
+              className={`text-xs ${
+                assetData.oneDayChange >= 0 ? 'text-green-500' : 'text-red-500'
+              }`}>
+              {assetData.oneDayChange >= 0 ? '+' : ''}
+              {assetData.oneDayChange.toFixed(2)}%
+            </div>
+          </>
+        ) : (
+          <div className='text-[10px] text-muted-foreground/70'>Loading...</div>
+        )}
+      </div>
     </Link>
   );
 };

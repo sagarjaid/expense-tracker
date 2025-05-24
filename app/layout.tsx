@@ -9,6 +9,7 @@ import GoogleAnalytics from '@/components/GoogleAnalytics';
 import config from '@/config';
 import './globals.css';
 import { ThemeProvider } from '../components/theme-provider';
+import Script from 'next/script';
 
 const font = Bricolage_Grotesque({ subsets: ['latin'] });
 
@@ -39,6 +40,14 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       lang='en'
       className={font.className}
       suppressHydrationWarning>
+      <head>
+        <Script
+          async
+          src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8500986101092156'
+          crossOrigin='anonymous'
+          strategy='afterInteractive'
+        />
+      </head>
       <body>
         <ThemeProvider
           attribute='class'
