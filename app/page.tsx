@@ -11,6 +11,7 @@ import ExportCSVButton from '@/components/ExportCSVButton';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import config from '@/config';
+import ThemeToggleButton from '@/components/ThemeToggleButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,7 +32,10 @@ export default async function Dashboard() {
             <h1 className='text-3xl md:text-4xl font-extrabold'>
               Expense Tracker
             </h1>
-            <ButtonAccount />
+            <div className='flex items-end justify-end gap-2'>
+              <ButtonAccount />
+              <ThemeToggleButton />
+            </div>
           </div>
         </section>
       </main>
@@ -42,10 +46,13 @@ export default async function Dashboard() {
     <main className='min-h-screen p-8 pb-24'>
       <section className='max-w-3xl mx-auto space-y-8'>
         <div className='flex justify-between items-center'>
-          <h1 className='text-3xl md:text-4xl font-extrabold'>
+          <h1 className='text-sm md:text-4xl font-extrabold'>
             Expense Tracker
           </h1>
-          <ButtonAccount />
+          <div className='flex items-end justify-end gap-2'>
+            <ButtonAccount />
+            <ThemeToggleButton />
+          </div>
         </div>
         <Tabs
           defaultValue='all'

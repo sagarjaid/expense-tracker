@@ -50,7 +50,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <body>
         <ThemeProvider
           attribute='class'
-          defaultTheme='system'
+          defaultTheme='light'
           enableSystem
           disableTransitionOnChange
           storageKey='theme'
