@@ -7,7 +7,7 @@ import config from '@/config';
 // It prefills data with default title/description/OG, etc.. and you can cusotmize it for each page.
 // It's already added in the root layout.js so you don't have to add it to every page.
 // But I recommend setting the canonical URL for each page (export const metadata = getSEOTags({canonicalUrlRelative: "/"});)
-// See https://basedinbitcoin.com/docs/features/seo
+// See https://ex.sagarjaid.com/docs/features/seo
 export const getSEOTags = ({
   title,
   description,
@@ -76,7 +76,7 @@ export const getSEOTags = ({
 // You don't have to use this component, but it increases your chances of having a rich snippet on Google.
 // I recommend adding the one below to your /page.js for software apps: It tells Google that your AppName is a SoftwareApplication, and it has a rating of 4.8/5 from 12 reviews.
 // Fill in the fields with your own data.
-// See https://basedinbitcoin.com/docs/features/seo
+// See https://ex.sagarjaid.com/docs/features/seo
 export const renderSchemaTags = () => {
   return (
     <script

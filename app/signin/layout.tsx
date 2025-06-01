@@ -7,7 +7,7 @@ import config from '@/config';
 export const metadata = getSEOTags({
   title: `Sign In | ${config.appName}`,
   description:
-    'Sign in to BasedinBitcoin to track and compare asset prices against Bitcoin in real-time.',
+    'Sign in to ex.sagarjaid to track and compare asset prices against Bitcoin in real-time.',
   canonicalUrlRelative: '/signin',
 });
 

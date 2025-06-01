@@ -14,8 +14,8 @@ import config from '@/config';
 // You are an excellent lawyer.
 
 // I need your help to write a simple privacy policy for my website. Here is some context:
-// - Website: https://basedinbitcoin.com
-// - Name: basedinbitcoin
+// - Website: https://ex.sagarjaid.com
+// - Name: ex.sagarjaid
 // - Description: A JavaScript code boilerplate to help entrepreneurs launch their startups faster
 // - User data collected: name, email and payment information
 // - Non-personal data collection: web cookies
@@ -23,14 +23,14 @@ import config from '@/config';
 // - Data sharing: we do not share the data with any other parties
 // - Children's Privacy: we do not collect any data from children
 // - Updates to the Privacy Policy: users will be updated by email
-// - Contact information: basedinbitcoin@gmail.com
+// - Contact information: ex.sagarjaid@gmail.com
 
 // Please write a simple privacy policy for my site. Add the current date.  Do not add or explain your reasoning. Answer:
 
 export const metadata = getSEOTags({
   title: `Privacy Policy | ${config.appName}`,
   description:
-    'Learn about how BasedinBitcoin protects your privacy and handles your data while you track and compare asset prices against Bitcoin.',
+    'Learn about how ex.sagarjaid protects your privacy and handles your data while you track and compare asset prices against Bitcoin.',
   canonicalUrlRelative: '/privacy-policy',
 });
 
@@ -63,7 +63,7 @@ const PrivacyPolicy = () => {
           style={{ fontFamily: 'sans-serif' }}>
           {`Last Updated: Mar 6, 2025
 
-Thank you for visiting basedinbitcoin ("we," "us," or "our"). This Privacy Policy outlines how we collect, use, and protect your personal and non-personal information when you use our website located at https://basedinbitcoin.com (the "Website").
+Thank you for visiting ex.sagarjaid ("we," "us," or "our"). This Privacy Policy outlines how we collect, use, and protect your personal and non-personal information when you use our website located at https://ex.sagarjaid.com (the "Website").
 
 By accessing or using the Website, you agree to the terms of this Privacy Policy. If you do not agree with the practices described in this policy, please do not use the Website.
 
@@ -91,7 +91,7 @@ We do not share your personal data with any third parties except as required for
 
 4. Children's Privacy
 
-basedinbitcoin is not intended for children under the age of 13. We do not knowingly collect personal information from children. If you are a parent or guardian and believe that your child has provided us with personal information, please contact us at the email address provided below.
+ex.sagarjaid is not intended for children under the age of 13. We do not knowingly collect personal information from children. If you are a parent or guardian and believe that your child has provided us with personal information, please contact us at the email address provided below.
 
 5. Updates to the Privacy Policy
 
@@ -101,11 +101,11 @@ We may update this Privacy Policy from time to time to reflect changes in our pr
 
 If you have any questions, concerns, or requests related to this Privacy Policy, you can contact us at:
 
-Email: basedinbitcoin@gmail.com
+Email: ex.sagarjaid@gmail.com
 
 For all other inquiries, please visit our Contact Us page on the Website.
 
-By using basedinbitcoin, you consent to the terms of this Privacy Policy.`}
+By using ex.sagarjaid, you consent to the terms of this Privacy Policy.`}
         </pre>
       </div>
     </main>
