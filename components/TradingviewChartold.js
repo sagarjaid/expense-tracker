@@ -187,7 +187,7 @@ const ChartComponent = ({
   return (
     <div className='flex flex-col gap-2'>
       <div className='flex gap-4 mb-5 justify-between lg:flex-row flex-col items-center'>
-        <div className=' font-bold text-lg sm:text-xl'>
+        <div className=' font-medium text-lg sm:text-xl'>
           {TopTitle + retitle}
         </div>
 
@@ -220,7 +220,7 @@ const ChartComponent = ({
               Logarithmic
             </label>
             <button
-              className='bg-muted hover:bg-muted/80 text-muted-foreground font-bold py-1 px-2 rounded inline-flex items-center h-10 transition-colors'
+              className='bg-muted hover:bg-muted/80 text-muted-foreground font-medium py-1 px-2 rounded inline-flex items-center h-10 transition-colors'
               onClick={downloadData}>
               <svg
                 className='fill-current w-4 h-4 mr-2'

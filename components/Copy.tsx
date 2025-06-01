@@ -138,7 +138,7 @@ const Copy = () => {
 
       <Link
         href={`/${getSlugForTab(selectedTab)}`}
-        className='border border-gray-700 rounded-sm  gap-1.5 hover:bg-muted/80 text-muted-foreground font-bold py-4 px-6  flex items-center h-12 transition-colors'>
+        className='border border-gray-700 rounded-sm  gap-1.5 hover:bg-muted/80 text-muted-foreground font-medium py-4 px-6  flex items-center h-12 transition-colors'>
         <span>Continue to {selectedTab}</span>
         <span>🚀</span>
       </Link>

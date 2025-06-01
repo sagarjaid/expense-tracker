@@ -1,13 +1,6 @@
 /** @format */
 
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import ButtonAccount from '@/components/ButtonAccount';
-import { Button } from '@/components/ui/button';
-import ExpenseForm from '@/components/ExpenseForm';
-import ExpenseList from '@/components/ExpenseList';
-import ExpenseSummary from '@/components/ExpenseSummary';
-import ExportCSVButton from '@/components/ExportCSVButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,76 +10,9 @@ export const dynamic = 'force-dynamic';
 export default async function Dashboard() {
   return (
     <main className='min-h-screen p-8 pb-24'>
-      <section className='max-w-2xl mx-auto space-y-8'>
-        <div className='flex justify-between items-center'>
-          <h1 className='text-3xl md:text-4xl font-extrabold'>
-            Expense Tracker
-          </h1>
-          <ButtonAccount />
-        </div>
-        <Tabs
-          defaultValue='all'
-          className='w-full'>
-          <TabsList className='mb-4'>
-            <TabsTrigger value='all'>All</TabsTrigger>
-            <TabsTrigger value='needs'>Needs</TabsTrigger>
-            <TabsTrigger value='wants'>Wants</TabsTrigger>
-            <TabsTrigger value='investment'>Investment</TabsTrigger>
-            <TabsTrigger value='summary'>Summary</TabsTrigger>
-          </TabsList>
-          <TabsContent value='all'>
-            <Card>
-              <CardHeader>
-                <CardTitle>Add Expense</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ExpenseForm />
-                <ExpenseList />
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value='needs'>
-            <Card>
-              <CardHeader>
-                <CardTitle>Needs</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ExpenseList initialCategory='Needs' />
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value='wants'>
-            <Card>
-              <CardHeader>
-                <CardTitle>Wants</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ExpenseList initialCategory='Wants' />
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value='investment'>
-            <Card>
-              <CardHeader>
-                <CardTitle>Investment</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ExpenseList initialCategory='Investment' />
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value='summary'>
-            <Card>
-              <CardHeader>
-                <CardTitle>Summary</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ExpenseSummary />
-                <ExportCSVButton />
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+      <section className='max-w-xl mx-auto space-y-8'>
+        <ButtonAccount />
+        <h1 className='text-3xl md:text-4xl font-extrabold'>Private Page</h1>
       </section>
     </main>
   );

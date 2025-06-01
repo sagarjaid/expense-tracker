@@ -24,12 +24,12 @@ export async function generateMetadata({
 
   if (!post) {
     return {
-      title: 'Post Not Found | BasedinBitcoin',
+      title: 'Post Not Found | ex.sagarjaid',
     };
   }
 
   return {
-    title: `${post.title} | BasedinBitcoin Blog`,
+    title: `${post.title} | ex.sagarjaid Blog`,
     description: post.slug,
     openGraph: {
       title: post.title,
@@ -63,7 +63,7 @@ function renderNotionBlock(block: any) {
         <h1
           id={block.id}
           key={block.id}
-          className='text-3xl font-bold mt-8 mb-4'>
+          className='text-3xl font-medium mt-8 mb-4'>
           {block.heading_1.rich_text.map((text: any, i: number) => (
             <span key={i}>{text.plain_text}</span>
           ))}
@@ -74,7 +74,7 @@ function renderNotionBlock(block: any) {
         <h2
           id={block.id}
           key={block.id}
-          className='text-2xl font-bold mt-6 mb-3'>
+          className='text-2xl font-medium mt-6 mb-3'>
           {block.heading_2.rich_text.map((text: any, i: number) => (
             <span key={i}>{text.plain_text}</span>
           ))}
@@ -85,7 +85,7 @@ function renderNotionBlock(block: any) {
         <h3
           id={block.id}
           key={block.id}
-          className='text-xl font-bold mt-4 mb-2'>
+          className='text-xl font-medium mt-4 mb-2'>
           {block.heading_3.rich_text.map((text: any, i: number) => (
             <span key={i}>{text.plain_text}</span>
           ))}
@@ -126,7 +126,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
             <span className='text-foreground'>{post.title || 'Hello'}</span>
           </nav>
 
-          <h1 className='text-4xl md:text-6xl font-bold text-foreground mb-6'>
+          <h1 className='text-4xl md:text-6xl font-medium text-foreground mb-6'>
             {post.title}
           </h1>
           {post.subTitle && (
@@ -200,11 +200,11 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               {/* Share Buttons */}
               <ShareButtons
                 title={post.title}
-                url={`https://basedinbitcoin.com/blog/${post.slug}`}
+                url={`https://ex.sagarjaid.com/blog/${post.slug}`}
               />
               {/* Written By Section */}
               <div className='flex items-center gap-4 mt-12 mb-8'>
-                <div className='w-16 h-16 rounded-full bg-muted flex items-center justify-center text-xl font-bold'>
+                <div className='w-16 h-16 rounded-full bg-muted flex items-center justify-center text-xl font-medium'>
                   {post.author?.[0] || 'A'}
                 </div>
                 <div>
@@ -214,7 +214,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               </div>
               {/* CTA Section */}
               <div className='  border border-green-600 rounded-lg p-6 h-64 flex flex-col justify-center items-center text-center mt-8'>
-                <h3 className='text-2xl font-bold mb-2 max-w-xl mx-auto text-muted-foreground text-center'>
+                <h3 className='text-2xl font-medium mb-2 max-w-xl mx-auto text-muted-foreground text-center'>
                   What&apos;s the price of BTC against Stock?
                 </h3>
                 <p className='mb-4 max-w-xl mx-auto text-muted-foreground text-center'>
@@ -225,7 +225,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
 
                 <Link
                   href={`/stock`}
-                  className='border border-green-600 bg-green-600 hover:bg-green-700 text-white rounded-sm  gap-1.5 font-bold py-4 px-6  flex items-center h-12 transition-colors'>
+                  className='border border-green-600 bg-green-600 hover:bg-green-700 text-white rounded-sm  gap-1.5 font-medium py-4 px-6  flex items-center h-12 transition-colors'>
                   <span>Check BTC price against Stocks</span>
                   <span>🚀</span>
                 </Link>

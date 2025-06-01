@@ -57,7 +57,7 @@ const ButtonPopover = () => {
                       </svg>
                     </span>
                     <div className=''>
-                      <p className='font-bold'>Get Started</p>
+                      <p className='font-medium'>Get Started</p>
                       <p className='opacity-70'>
                         Loreum ipseum de la madre de papa
                       </p>
@@ -80,7 +80,7 @@ const ButtonPopover = () => {
                       </svg>
                     </span>
                     <div className=''>
-                      <p className='font-bold'>Rewards</p>
+                      <p className='font-medium'>Rewards</p>
                       <p className='opacity-70'>
                         Loreum ipseum de el papi de la mama
                       </p>
@@ -103,7 +103,7 @@ const ButtonPopover = () => {
                       </svg>
                     </span>
                     <div className=''>
-                      <p className='font-bold'>Academics</p>
+                      <p className='font-medium'>Academics</p>
                       <p className='opacity-70'>
                         Loreum ipseum de la madre de papa
                       </p>

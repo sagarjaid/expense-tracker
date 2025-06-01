@@ -7,6 +7,20 @@ import { Card, CardContent } from '@/components/ui/card';
 import { DatePicker } from '@/components/ui/date-range-picker';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import { CalendarIcon } from 'lucide-react';
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  Legend,
+  Tooltip,
+} from 'recharts';
 
 const categories = ['All', 'Needs', 'Wants', 'Investment'];
 const subcategories: Record<string, string[]> = {
@@ -70,6 +84,106 @@ function getFirstAndLastDayOfMonth(year: number, month: number) {
   return { first, last };
 }
 
+interface Expense {
+  id: string;
+  amount: number;
+  description: string;
+  category: string;
+  subcategory: string;
+  date: string;
+}
+
+function CategoryPieChart({
+  expenses,
+  category,
+}: {
+  expenses: Expense[];
+  category: string;
+}) {
+  // Calculate total amount for each subcategory
+  const subcategoryTotals = expenses.reduce(
+    (acc: Record<string, number>, exp) => {
+      if (exp.category === category) {
+        acc[exp.subcategory] = (acc[exp.subcategory] || 0) + Number(exp.amount);
+      }
+      return acc;
+    },
+    {}
+  );
+
+  // Convert to array format for Recharts
+  const data = Object.entries(subcategoryTotals).map(([name, value]) => ({
+    name,
+    value: Number(value.toFixed(2)),
+  }));
+
+  // Set color by category
+  let mainColor = '#8884d8';
+  if (category === 'Needs') mainColor = '#ef4444'; // red-500
+  if (category === 'Wants') mainColor = '#3b82f6'; // blue-500
+  if (category === 'Investment') mainColor = '#22c55e'; // green-500
+
+  // Distinct color palette
+  const PALETTE = [
+    '#ef4444', // red
+    '#3b82f6', // blue
+    '#22c55e', // green
+    '#f59e42', // orange
+    '#a855f7', // purple
+    '#eab308', // yellow
+    '#14b8a6', // teal
+    '#6366f1', // indigo
+    '#f43f5e', // pink
+    '#0ea5e9', // sky
+    '#84cc16', // lime
+    '#f97316', // orange dark
+    '#b91c1c', // red dark
+    '#7c3aed', // violet
+    '#d97706', // amber
+  ];
+
+  let COLORS: string[] = [];
+  if (data.length <= 1) {
+    COLORS = [mainColor];
+  } else {
+    COLORS = data.map((_, i) => PALETTE[i % PALETTE.length]);
+  }
+
+  if (data.length === 0) return null;
+
+  return (
+    <div className='h-[400px] w-full'>
+      <h3 className='text-lg font-semibold mb-2'>{category} Distribution</h3>
+      <ResponsiveContainer
+        width='100%'
+        height='100%'>
+        <PieChart>
+          <Pie
+            data={data}
+            cx='50%'
+            cy='50%'
+            labelLine={false}
+            label={({ name, percent }) =>
+              `${name} (${(percent * 100).toFixed(0)}%)`
+            }
+            outerRadius={80}
+            fill={COLORS[0]}
+            dataKey='value'>
+            {data.map((entry, index) => (
+              <Cell
+                key={`cell-${index}`}
+                fill={COLORS[index % COLORS.length]}
+              />
+            ))}
+          </Pie>
+          <Tooltip formatter={(value: number) => `₹${value.toFixed(2)}`} />
+          <Legend />
+        </PieChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
 export default function ExpenseList({
   initialCategory = 'All',
 }: {
@@ -84,7 +198,7 @@ export default function ExpenseList({
   );
   const [startDate, setStartDate] = useState<Date | undefined>(defaultStart);
   const [endDate, setEndDate] = useState<Date | undefined>(defaultEnd);
-  const [expenses, setExpenses] = useState<any[]>([]);
+  const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState(initialCategory);
   const [subcategory, setSubcategory] = useState<string>('');
@@ -166,7 +280,7 @@ export default function ExpenseList({
               </option>
             ))}
           </select>
-          <select
+          {/* <select
             className='h-9 rounded-md border px-3 py-1 text-base bg-transparent'
             value={selectedYear}
             onChange={(e) => setSelectedYear(Number(e.target.value))}>
@@ -177,9 +291,9 @@ export default function ExpenseList({
                 {y}
               </option>
             ))}
-          </select>
+          </select> */}
           <select
-            className='w-40 h-9 rounded-md border px-3 py-1 text-base bg-transparent'
+            className='w-28 h-9 rounded-md border px-3 py-1 text-base bg-transparent'
             value={category}
             onChange={(e) => setCategory(e.target.value)}>
             {categories.map((cat) => (
@@ -195,7 +309,7 @@ export default function ExpenseList({
               className='w-40 h-9 rounded-md border px-3 py-1 text-base bg-transparent'
               value={subcategory}
               onChange={(e) => setSubcategory(e.target.value)}>
-              <option value=''>All Subcategories</option>
+              <option value=''>Subcategory</option>
               {subcategories[category]?.map((subcat) => (
                 <option
                   key={subcat}
@@ -205,63 +319,100 @@ export default function ExpenseList({
               ))}
             </select>
           )}
-          <div className='flex gap-2 items-center'>
-            <span className='text-sm'>From:</span>
-            <DatePicker
-              date={startDate}
-              onDateChange={setStartDate}
-            />
-            <span className='text-sm'>To:</span>
-            <DatePicker
-              date={endDate}
-              onDateChange={setEndDate}
-            />
-            <Button
-              type='button'
-              variant='outline'
-              onClick={() => {
-                setStartDate(undefined);
-                setEndDate(undefined);
-              }}>
-              Clear Dates
-            </Button>
-          </div>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant='outline'
+                className='h-9 px-3 py-1'>
+                <CalendarIcon className='h-4 w-4 mr-2' />
+                {startDate && endDate
+                  ? `${format(startDate, 'dd/MM/yyyy')} - ${format(
+                      endDate,
+                      'dd/MM/yyyy'
+                    )}`
+                  : 'Select Dates'}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent
+              className='w-auto p-4'
+              align='start'>
+              <div className='flex flex-col gap-4'>
+                <div className='flex gap-2 items-center'>
+                  <span className='text-sm'>From:</span>
+                  <DatePicker
+                    date={startDate}
+                    onDateChange={setStartDate}
+                  />
+                </div>
+                <div className='flex gap-2 items-center'>
+                  <span className='text-sm'>To:</span>
+                  <DatePicker
+                    date={endDate}
+                    onDateChange={setEndDate}
+                  />
+                </div>
+                <Button
+                  type='button'
+                  variant='outline'
+                  className='w-full'
+                  onClick={() => {
+                    setStartDate(undefined);
+                    setEndDate(undefined);
+                  }}>
+                  Clear
+                </Button>
+              </div>
+            </PopoverContent>
+          </Popover>
         </div>
         {loading ? (
           <div className='text-center py-8'>Loading...</div>
         ) : expenses.length === 0 ? (
           <div className='text-center py-8'>No expenses found.</div>
         ) : (
-          <div className='overflow-x-auto'>
-            <table className='min-w-full text-sm'>
-              <thead>
-                <tr className='border-b'>
-                  <th className='px-2 py-2 text-left'>Amount</th>
-                  <th className='px-2 py-2 text-left'>Description</th>
-                  <th className='px-2 py-2 text-left'>Category</th>
-                  <th className='px-2 py-2 text-left'>Subcategory</th>
-                  <th className='px-2 py-2 text-left'>Date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {expenses.map((exp) => (
-                  <tr
-                    key={exp.id}
-                    className='border-b hover:bg-muted/30'>
-                    <td className='px-2 py-2'>
-                      ₹{Number(exp.amount).toFixed(2)}
-                    </td>
-                    <td className='px-2 py-2'>{exp.description}</td>
-                    <td className='px-2 py-2'>{exp.category}</td>
-                    <td className='px-2 py-2'>{exp.subcategory}</td>
-                    <td className='px-2 py-2'>
-                      {exp.date ? format(new Date(exp.date), 'dd/MM/yyyy') : ''}
-                    </td>
+          <>
+            {category !== 'All' && (
+              <div className='mb-8'>
+                <Card className='p-4'>
+                  <CategoryPieChart
+                    expenses={expenses}
+                    category={category}
+                  />
+                </Card>
+              </div>
+            )}
+            <div className='overflow-x-auto'>
+              <table className='min-w-full text-sm'>
+                <thead>
+                  <tr className='border-b'>
+                    <th className='px-2 py-2 text-left'>Date</th>
+                    <th className='px-2 py-2 text-left'>Category</th>
+                    <th className='px-2 py-2 text-left'>Subcategory</th>
+                    <th className='px-2 py-2 text-left'>Amount</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {expenses.map((exp) => (
+                    <tr
+                      key={exp.id}
+                      className='border-b hover:bg-muted/30'>
+                      <td className='px-2 py-2'>
+                        {exp.date
+                          ? format(new Date(exp.date), 'dd/MM/yyyy')
+                          : ''}
+                      </td>
+
+                      <td className='px-2 py-2'>{exp.category}</td>
+                      <td className='px-2 py-2'>{exp.subcategory}</td>
+                      <td className='px-2 py-2'>
+                        ₹{Number(exp.amount).toFixed(2)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </CardContent>
     </Card>
