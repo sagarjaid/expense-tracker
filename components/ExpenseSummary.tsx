@@ -18,6 +18,9 @@ import {
   Cell,
 } from 'recharts';
 import { format, eachDayOfInterval, isSameDay } from 'date-fns';
+import { RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import ExportCSVButton from './ExportCSVButton';
 
 const categories = ['Needs', 'Wants', 'Investment'] as const;
 type Category = (typeof categories)[number];
@@ -35,7 +38,8 @@ const initialTotals: TotalsType = {
 const subcategories: Record<Category, string[]> = {
   Needs: [
     'Rent',
-    'Food and Grocery',
+    'Food',
+    'Grocery',
     'Mobile',
     'Clothes',
     'Transport',
@@ -215,6 +219,7 @@ export default function ExpenseSummary() {
   const [pieData, setPieData] = useState<
     { name: string; value: number; color: string }[]
   >([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Update start/end date when month/year changes
   useEffect(() => {
@@ -226,133 +231,140 @@ export default function ExpenseSummary() {
     setEndDate(last);
   }, [selectedYear, selectedMonth]);
 
-  useEffect(() => {
-    const fetchSummary = async () => {
-      setLoading(true);
-      const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      if (!user) {
-        setTotals(initialTotals);
-        setChartData([]);
-        setMainCatChartData([]);
-        setPieData([]);
-        setLoading(false);
-        return;
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await fetchSummary();
+    setIsRefreshing(false);
+  };
+
+  const fetchSummary = async () => {
+    setLoading(true);
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      setTotals(initialTotals);
+      setChartData([]);
+      setMainCatChartData([]);
+      setPieData([]);
+      setLoading(false);
+      return;
+    }
+    let query = supabase
+      .from('expenses')
+      .select('amount, category, subcategory, date')
+      .eq('user_id', user.id);
+    if (startDate) {
+      query = query.gte('date', format(startDate, 'yyyy-MM-dd'));
+    }
+    if (endDate) {
+      query = query.lte('date', format(endDate, 'yyyy-MM-dd'));
+    }
+    const { data, error } = await query;
+    if (error || !data) {
+      setTotals(initialTotals);
+      setChartData([]);
+      setMainCatChartData([]);
+      setPieData([]);
+    } else {
+      // Calculate totals for the summary table
+      const sums: TotalsType = {
+        Needs: {},
+        Wants: {},
+        Investment: {},
+      };
+
+      // Initialize subcategory totals
+      for (const cat of categories) {
+        for (const subcat of subcategories[cat]) {
+          sums[cat][subcat] = 0;
+        }
       }
-      let query = supabase
-        .from('expenses')
-        .select('amount, category, subcategory, date')
-        .eq('user_id', user.id);
-      if (startDate) {
-        query = query.gte('date', startDate.toISOString().slice(0, 10));
-      }
-      if (endDate) {
-        query = query.lte('date', endDate.toISOString().slice(0, 10));
-      }
-      const { data, error } = await query;
-      if (error || !data) {
-        setTotals(initialTotals);
-        setChartData([]);
-        setMainCatChartData([]);
-        setPieData([]);
-      } else {
-        // Calculate totals for the summary table
-        const sums: TotalsType = {
-          Needs: {},
-          Wants: {},
-          Investment: {},
+
+      // Prepare data for the main category stacked bar chart
+      const days = eachDayOfInterval({ start: startDate!, end: endDate! });
+      const mainCatData = days.map((day) => {
+        const dayExpenses = data.filter((exp) =>
+          isSameDay(new Date(exp.date), day)
+        );
+        const dayObj: any = {
+          date: format(day, 'd MMMM'),
+          Needs: 0,
+          Wants: 0,
+          Investment: 0,
+        };
+        dayExpenses.forEach((exp) => {
+          if (categories.includes(exp.category as Category)) {
+            const amount = Number(exp.amount);
+            const category = exp.category as Category;
+            dayObj[category] += amount;
+            // Update summary totals
+            if (subcategories[category]?.includes(exp.subcategory)) {
+              sums[category][exp.subcategory] += amount;
+            }
+          }
+        });
+        return dayObj;
+      });
+      setTotals(sums);
+      setMainCatChartData(mainCatData);
+      // Pie chart data: sum for each main category over the date range
+      const pieSums = { Needs: 0, Wants: 0, Investment: 0 };
+      data.forEach((exp) => {
+        if (categories.includes(exp.category as Category)) {
+          pieSums[exp.category as Category] += Number(exp.amount);
+        }
+      });
+      setPieData(
+        categories.map((cat) => ({
+          name: cat,
+          value: pieSums[cat],
+          color: categoryColors[cat],
+        }))
+      );
+      // Prepare data for the chart
+      const dailyData = days.map((day) => {
+        const dayExpenses = data.filter((exp) =>
+          isSameDay(new Date(exp.date), day)
+        );
+        const dayTotal: ChartDataPoint = {
+          date: format(day, 'dd/MM'),
+          total: 0,
         };
 
-        // Initialize subcategory totals
-        for (const cat of categories) {
-          for (const subcat of subcategories[cat]) {
-            sums[cat][subcat] = 0;
-          }
-        }
-
-        // Prepare data for the main category stacked bar chart
-        const days = eachDayOfInterval({ start: startDate!, end: endDate! });
-        const mainCatData = days.map((day) => {
-          const dayExpenses = data.filter((exp) =>
-            isSameDay(new Date(exp.date), day)
-          );
-          const dayObj: any = {
-            date: format(day, 'd MMMM'),
-            Needs: 0,
-            Wants: 0,
-            Investment: 0,
-          };
-          dayExpenses.forEach((exp) => {
-            if (categories.includes(exp.category as Category)) {
-              const amount = Number(exp.amount);
-              const category = exp.category as Category;
-              dayObj[category] += amount;
-              // Update summary totals
-              if (subcategories[category]?.includes(exp.subcategory)) {
-                sums[category][exp.subcategory] += amount;
-              }
-            }
+        // Initialize all subcategory totals for this day
+        categories.forEach((cat) => {
+          subcategories[cat].forEach((subcat) => {
+            dayTotal[`${cat}-${subcat}`] = 0;
           });
-          return dayObj;
         });
-        setTotals(sums);
-        setMainCatChartData(mainCatData);
-        // Pie chart data: sum for each main category over the date range
-        const pieSums = { Needs: 0, Wants: 0, Investment: 0 };
-        data.forEach((exp) => {
+
+        // Sum up expenses by subcategory for this day
+        dayExpenses.forEach((exp) => {
           if (categories.includes(exp.category as Category)) {
-            pieSums[exp.category as Category] += Number(exp.amount);
+            const amount = Number(exp.amount);
+            const category = exp.category as Category;
+            const subcat = exp.subcategory;
+
+            if (subcategories[category]?.includes(subcat)) {
+              dayTotal[`${category}-${subcat}`] =
+                (dayTotal[`${category}-${subcat}`] as number) + amount;
+              dayTotal.total += amount;
+              sums[category][subcat] += amount;
+            }
           }
         });
-        setPieData(
-          categories.map((cat) => ({
-            name: cat,
-            value: pieSums[cat],
-            color: categoryColors[cat],
-          }))
-        );
-        // Prepare data for the chart
-        const dailyData = days.map((day) => {
-          const dayExpenses = data.filter((exp) =>
-            isSameDay(new Date(exp.date), day)
-          );
-          const dayTotal: ChartDataPoint = {
-            date: format(day, 'dd/MM'),
-            total: 0,
-          };
 
-          // Initialize all subcategory totals for this day
-          categories.forEach((cat) => {
-            subcategories[cat].forEach((subcat) => {
-              dayTotal[`${cat}-${subcat}`] = 0;
-            });
-          });
+        return dayTotal;
+      });
 
-          // Sum up expenses by subcategory for this day
-          dayExpenses.forEach((exp) => {
-            if (categories.includes(exp.category as Category)) {
-              const amount = Number(exp.amount);
-              const category = exp.category as Category;
-              const subcat = exp.subcategory;
+      setChartData(dailyData);
+    }
+    setLoading(false);
+  };
 
-              if (subcategories[category]?.includes(subcat)) {
-                dayTotal[`${category}-${subcat}`] =
-                  (dayTotal[`${category}-${subcat}`] as number) + amount;
-                dayTotal.total += amount;
-                sums[category][subcat] += amount;
-              }
-            }
-          });
-
-          return dayTotal;
-        });
-
-        setChartData(dailyData);
-      }
-      setLoading(false);
-    };
+  useEffect(() => {
     fetchSummary();
   }, [startDate, endDate]);
 
@@ -364,42 +376,57 @@ export default function ExpenseSummary() {
 
   // Tab UI
   const tabClass = (tab: 'trend' | 'pie') =>
-    `px-4 py-2 rounded-t-md font-semibold cursor-pointer ${
-      activeTab === tab ? 'bg-gray-200' : 'bg-gray-100 text-gray-500'
+    `px-4 py-2 rounded-t-md text-sm cursor-pointer ${
+      activeTab === tab ? 'border border-b-0 font-medium' : '  border-gray-200'
     }`;
 
   return (
-    <Card className='mt-6'>
+    <Card className=''>
       <CardHeader>
-        <CardTitle>Expense Summary</CardTitle>
+        <div className='flex justify-between items-center'>
+          <div className='flex flex-wrap gap-4  items-center'>
+            <select
+              className='h-9 rounded-md border px-3 py-1 text-base bg-transparent'
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(Number(e.target.value))}>
+              {monthNames.map((name, idx) => (
+                <option
+                  key={name}
+                  value={idx}>
+                  {name}
+                </option>
+              ))}
+            </select>
+            <select
+              className='h-9 rounded-md border px-3 py-1 text-base bg-transparent'
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(Number(e.target.value))}>
+              {yearOptions.map((y) => (
+                <option
+                  key={y}
+                  value={y}>
+                  {y}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className='flex items-center gap-2'>
+            <ExportCSVButton />
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={handleRefresh}
+              disabled={isRefreshing || loading}
+              className='flex items-center gap-2'>
+              <RefreshCw
+                className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
+              />
+            </Button>
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
-        <div className='flex flex-wrap gap-4 mb-4 items-center'>
-          <select
-            className='h-9 rounded-md border px-3 py-1 text-base bg-transparent'
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(Number(e.target.value))}>
-            {monthNames.map((name, idx) => (
-              <option
-                key={name}
-                value={idx}>
-                {name}
-              </option>
-            ))}
-          </select>
-          <select
-            className='h-9 rounded-md border px-3 py-1 text-base bg-transparent'
-            value={selectedYear}
-            onChange={(e) => setSelectedYear(Number(e.target.value))}>
-            {yearOptions.map((y) => (
-              <option
-                key={y}
-                value={y}>
-                {y}
-              </option>
-            ))}
-          </select>
-        </div>
         {/* Tabs */}
         <div className='flex border-b'>
           <div
@@ -421,7 +448,7 @@ export default function ExpenseSummary() {
           <>
             {/* Tab content */}
             {activeTab === 'trend' && (
-              <div className='h-[400px] mb-8 border-b border-x '>
+              <div className='h-[400px] mb-8 pb-4 border-b border-x '>
                 <ResponsiveContainer
                   width='100%'
                   height='100%'>
@@ -503,7 +530,7 @@ export default function ExpenseSummary() {
                         key={subcat}
                         className='flex justify-between border-b py-1'>
                         <span>{subcat}</span>
-                        <span className='font-medium'>
+                        <span className='text-muted-foreground'>
                           ₹{totals[cat]?.[subcat]?.toFixed(2) || '0.00'}
                         </span>
                       </div>
@@ -517,6 +544,27 @@ export default function ExpenseSummary() {
                   </div>
                 </div>
               ))}
+
+              {/* Grand Total Section */}
+              <div className='mt-8 pt-4 border-t-2 border-gray-200'>
+                <div className='flex justify-between items-center'>
+                  <div className='text-lg font-bold'>Grand Total</div>
+                  <div className='text-lg font-bold'>
+                    ₹
+                    {categories
+                      .reduce(
+                        (sum, cat) =>
+                          sum +
+                          Object.values(totals[cat] || {}).reduce(
+                            (a, b) => a + b,
+                            0
+                          ),
+                        0
+                      )
+                      .toFixed(2)}
+                  </div>
+                </div>
+              </div>
             </div>
           </>
         )}

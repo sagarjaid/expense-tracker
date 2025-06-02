@@ -69,8 +69,8 @@ const ChartComponent = ({
       fixRightEdge: true,
       tickMarkFormatter: (time) => {
         return selectedTimespan === 'day'
-          ? moment.utc(time).format('YYYY-MM-DD')
-          : moment.utc(time).format('YYYY-MM-DD hh:mm');
+          ? moment.utc(time).format('dd-MM-yyyy')
+          : moment.utc(time).format('dd-MM-yyyy hh:mm');
       },
     },
   });
@@ -109,7 +109,7 @@ const ChartComponent = ({
       .map((item) => {
         const time =
           selectedTimespan === 'day'
-            ? moment(item?.t || item?.stock?.t).format('YYYY-MM-DD')
+            ? moment(item?.t || item?.stock?.t).format('dd-MM-yyyy')
             : Math.floor((item?.t || item?.stock?.t) / 1000);
 
         let value;
@@ -230,7 +230,7 @@ const ChartComponent = ({
             <DatePicker
               date={startDate ? new Date(startDate) : undefined}
               onDateChange={(date) => {
-                setStartDate(date ? format(date, 'yyyy-MM-dd') : '');
+                setStartDate(date ? format(date, 'dd-MM-yyyy') : '');
               }}
               className='w-40'
             />
@@ -238,7 +238,7 @@ const ChartComponent = ({
             <DatePicker
               date={endDate ? new Date(endDate) : undefined}
               onDateChange={(date) => {
-                setEndDate(date ? format(date, 'yyyy-MM-dd') : '');
+                setEndDate(date ? format(date, 'dd-MM-yyyy') : '');
               }}
               className='w-40'
             />

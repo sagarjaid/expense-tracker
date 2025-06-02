@@ -31,10 +31,10 @@ const AssetCard = ({ name, symbol, category }: AssetCardProps) => {
         // Get current date and one day ago
         const currentDate = moment()
           .subtract(daysAgo, 'days')
-          .format('YYYY-MM-DD');
+          .format('dd-MM-yyyy');
         const oneDayAgo = moment()
           .subtract(daysAgo + 1, 'days')
-          .format('YYYY-MM-DD');
+          .format('dd-MM-yyyy');
 
         // Format symbol based on category
         const formattedSymbol =

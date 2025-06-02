@@ -7,13 +7,16 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-range-picker';
 import { createClient } from '@/lib/supabase/client';
+import { format } from 'date-fns';
+import toast from 'react-hot-toast';
 
 const categoryOptions = ['Needs', 'Wants', 'Investment'];
 
 const subcategories: Record<string, string[]> = {
   Needs: [
     'Rent',
-    'Food and Grocery',
+    'Food',
+    'Grocery',
     'Mobile',
     'Clothes',
     'Transport',
@@ -59,7 +62,6 @@ export default function ExpenseForm() {
   );
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
 
   // Update subcategory when category changes
   const handleCategoryChange = (cat: string) => {
@@ -70,30 +72,31 @@ export default function ExpenseForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setMessage(null);
     const supabase = createClient();
     const {
       data: { user },
       error: userError,
     } = await supabase.auth.getUser();
     if (!user || userError) {
-      setMessage('User not authenticated.');
+      toast.error('User not authenticated.');
       setLoading(false);
       return;
     }
     const expense = {
       user_id: user.id,
       amount: parseFloat(amount),
-      description,
+      description: description.trim() === '' ? 'NULL' : description,
       category,
       subcategory,
-      date: date ? date.toISOString().slice(0, 10) : undefined,
+      date: date ? format(date, 'yyyy-MM-dd') : undefined,
     };
+    console.log(expense, 'expense');
+
     const { error } = await supabase.from('expenses').insert([expense]);
     if (error) {
-      setMessage('Error adding expense: ' + error.message);
+      toast.error('Error adding expense: ' + error.message);
     } else {
-      setMessage('Expense added successfully!');
+      toast.success('Expense added successfully!');
       setAmount('');
       setDescription('');
       setCategory(categoryOptions[0]);
@@ -108,7 +111,7 @@ export default function ExpenseForm() {
       className='space-y-4'
       onSubmit={handleSubmit}>
       <div>
-        <label className='block mb-1 font-medium'>Amount</label>
+        <label className='block mb-1 font-medium text-sm'>Amount</label>
         <Input
           type='number'
           min='0'
@@ -119,16 +122,15 @@ export default function ExpenseForm() {
         />
       </div>
       <div>
-        <label className='block mb-1 font-medium'>Description</label>
+        <label className='block mb-1 font-medium text-sm'>Description</label>
         <Input
           type='text'
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          required
         />
       </div>
       <div>
-        <label className='block mb-1 font-medium'>Category</label>
+        <label className='block mb-1 font-medium text-sm'>Category</label>
         <select
           className='w-full h-9 rounded-md border px-3 py-1 text-base bg-transparent'
           value={category}
@@ -144,7 +146,7 @@ export default function ExpenseForm() {
         </select>
       </div>
       <div>
-        <label className='block mb-1 font-medium'>Subcategory</label>
+        <label className='block mb-1 font-medium text-sm'>Subcategory</label>
         <select
           className='w-full h-9 rounded-md border px-3 py-1 text-base bg-transparent'
           value={subcategory}
@@ -160,7 +162,7 @@ export default function ExpenseForm() {
         </select>
       </div>
       <div>
-        <label className='block mb-1 font-medium'>Date</label>
+        <label className='block mb-1 font-medium text-sm'>Date</label>
         <DatePicker
           date={date}
           onDateChange={setDate}
@@ -171,7 +173,6 @@ export default function ExpenseForm() {
         disabled={loading}>
         {loading ? 'Adding...' : 'Add Expense'}
       </Button>
-      {message && <div className='text-sm mt-2'>{message}</div>}
     </form>
   );
 }

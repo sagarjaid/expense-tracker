@@ -65,7 +65,7 @@ export function DateRangePicker() {
       <DatePicker
         date={startDate ? new Date(startDate) : undefined}
         onDateChange={(date) => {
-          setStartDate(date ? format(date, 'yyyy-MM-dd') : '');
+          setStartDate(date ? format(date, 'dd-MM-yyyy') : '');
         }}
         className='w-40'
       />
@@ -73,7 +73,7 @@ export function DateRangePicker() {
       <DatePicker
         date={endDate ? new Date(endDate) : undefined}
         onDateChange={(date) => {
-          setEndDate(date ? format(date, 'yyyy-MM-dd') : '');
+          setEndDate(date ? format(date, 'dd-MM-yyyy') : '');
         }}
         className='w-40'
       />

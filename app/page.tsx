@@ -26,12 +26,10 @@ export default async function Dashboard() {
 
   if (!user) {
     return (
-      <main className='min-h-screen p-8 pb-24'>
+      <main className='min-h-screen p-4 pb-24'>
         <section className='max-w-2xl mx-auto space-y-8'>
           <div className='flex justify-between items-center'>
-            <h1 className='text-3xl md:text-4xl font-extrabold'>
-              Expense Tracker
-            </h1>
+            <h1 className='text-3xl md:text-4xl font-extrabold'>Expenslly</h1>
             <div className='flex items-end justify-end gap-2'>
               <ButtonAccount />
               <ThemeToggleButton />
@@ -43,12 +41,10 @@ export default async function Dashboard() {
   }
 
   return (
-    <main className='min-h-screen p-8 pb-24'>
-      <section className='max-w-3xl mx-auto space-y-8'>
+    <main className='min-h-screen p-4 pb-24'>
+      <section className='max-w-2xl mx-auto space-y-8'>
         <div className='flex justify-between items-center'>
-          <h1 className='text-sm md:text-4xl font-extrabold'>
-            Expense Tracker
-          </h1>
+          <h1 className='text-2xl md:text-4xl font-extrabold'>Expenslly</h1>
           <div className='flex items-end justify-end gap-2'>
             <ButtonAccount />
             <ThemeToggleButton />
@@ -108,11 +104,10 @@ export default async function Dashboard() {
           <TabsContent value='summary'>
             <Card>
               <CardHeader>
-                <CardTitle>Summary</CardTitle>
+                <CardTitle>Expense Summary</CardTitle>
               </CardHeader>
               <CardContent>
                 <ExpenseSummary />
-                <ExportCSVButton />
               </CardContent>
             </Card>
           </TabsContent>

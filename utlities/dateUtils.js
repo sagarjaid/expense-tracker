@@ -9,29 +9,29 @@ export const useDateUtils = () => {
     const currentDate = new Date();
     return {
       jsDate: currentDate,
-      formatted: moment(currentDate).format('YYYY-MM-DD'),
+      formatted: moment(currentDate).format('dd-MM-yyyy'),
     };
   };
 
   // Get standard date ranges used across the application
   const getDateRanges = () => {
     return {
-      oneDayAgo: moment().subtract(1, 'days').format('YYYY-MM-DD'),
-      fiveDaysAgo: moment().subtract(5, 'days').format('YYYY-MM-DD'),
-      oneMonthAgo: moment().subtract(1, 'months').format('YYYY-MM-DD'),
-      sixMonthsAgo: moment().subtract(6, 'months').format('YYYY-MM-DD'),
-      startOfYear: moment().startOf('year').format('YYYY-MM-DD'),
-      oneYearAgo: moment().subtract(1, 'years').format('YYYY-MM-DD'),
+      oneDayAgo: moment().subtract(1, 'days').format('dd-MM-yyyy'),
+      fiveDaysAgo: moment().subtract(5, 'days').format('dd-MM-yyyy'),
+      oneMonthAgo: moment().subtract(1, 'months').format('dd-MM-yyyy'),
+      sixMonthsAgo: moment().subtract(6, 'months').format('dd-MM-yyyy'),
+      startOfYear: moment().startOf('year').format('dd-MM-yyyy'),
+      oneYearAgo: moment().subtract(1, 'years').format('dd-MM-yyyy'),
       oneWeekYearAgo: moment()
         .subtract(1, 'years')
         .subtract(1, 'weeks')
-        .format('YYYY-MM-DD'),
-      fiveYearsAgo: moment().subtract(5, 'years').format('YYYY-MM-DD'),
-      tenYearsAgo: moment().subtract(10, 'years').format('YYYY-MM-DD'),
+        .format('dd-MM-yyyy'),
+      fiveYearsAgo: moment().subtract(5, 'years').format('dd-MM-yyyy'),
+      tenYearsAgo: moment().subtract(10, 'years').format('dd-MM-yyyy'),
     };
   };
 
-  // Convert timestamp to ISO date string (YYYY-MM-DD)
+  // Convert timestamp to ISO date string (dd-MM-yyyy)
   const timestampToISODate = (timestamp) => {
     const date = new Date(timestamp);
     return date.toISOString().split('T')[0];
@@ -59,7 +59,7 @@ export const useDateUtils = () => {
 
   // Set date range based on preset periods
   const setDateRangeByPeriod = (period) => {
-    const currentDate = moment(new Date()).format('YYYY-MM-DD');
+    const currentDate = moment(new Date()).format('dd-MM-yyyy');
     const ranges = getDateRanges();
 
     switch (period) {

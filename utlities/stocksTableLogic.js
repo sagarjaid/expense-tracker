@@ -12,32 +12,32 @@ export const useStocksTableLogic = () => {
   const getCurrentDate = () => {
     return {
       current: new Date(),
-      formatted: moment(new Date()).format('YYYY-MM-DD'),
+      formatted: moment(new Date()).format('dd-MM-yyyy'),
     };
   };
 
   const getDateRanges = () => {
     const currentDate = new Date();
     return {
-      oneDayAgo: moment().subtract(1, 'days').format('YYYY-MM-DD'),
-      fiveDaysAgo: moment().subtract(5, 'days').format('YYYY-MM-DD'),
-      oneMonthsAgo: moment().subtract(1, 'months').format('YYYY-MM-DD'),
-      sixMonthsAgo: moment().subtract(6, 'months').format('YYYY-MM-DD'),
-      startOfYear: moment().startOf('year').format('YYYY-MM-DD'),
-      oneYearAgo: moment().subtract(1, 'years').format('YYYY-MM-DD'),
+      oneDayAgo: moment().subtract(1, 'days').format('dd-MM-yyyy'),
+      fiveDaysAgo: moment().subtract(5, 'days').format('dd-MM-yyyy'),
+      oneMonthsAgo: moment().subtract(1, 'months').format('dd-MM-yyyy'),
+      sixMonthsAgo: moment().subtract(6, 'months').format('dd-MM-yyyy'),
+      startOfYear: moment().startOf('year').format('dd-MM-yyyy'),
+      oneYearAgo: moment().subtract(1, 'years').format('dd-MM-yyyy'),
       oneWeekYearAgo: moment()
         .subtract(1, 'years')
         .subtract(1, 'weeks')
-        .format('YYYY-MM-DD'),
-      fiveYearsAgo: moment().subtract(5, 'years').format('YYYY-MM-DD'),
-      tenYearsAgo: moment().subtract(10, 'years').format('YYYY-MM-DD'),
+        .format('dd-MM-yyyy'),
+      fiveYearsAgo: moment().subtract(5, 'years').format('dd-MM-yyyy'),
+      tenYearsAgo: moment().subtract(10, 'years').format('dd-MM-yyyy'),
     };
   };
 
   // Convert timestamp to date
   const convertTimestampToDate = (timestamp) => {
     const date = new Date(timestamp);
-    return date.toISOString().split('T')[0]; // returns date in YYYY-MM-DD format
+    return date.toISOString().split('T')[0]; // returns date in dd-MM-yyyy format
   };
 
   // Find currency data by date
@@ -55,7 +55,7 @@ export const useStocksTableLogic = () => {
   ) => {
     const formattedDate = moment()
       .subtract(daysAgo, 'days')
-      .format('YYYY-MM-DD');
+      .format('dd-MM-yyyy');
 
     try {
       const fetchPromises = stocksList.map((stock) => {
@@ -91,8 +91,8 @@ export const useStocksTableLogic = () => {
       oneWeekYearAgo: moment()
         .subtract(1, 'years')
         .subtract(1, 'weeks')
-        .format('YYYY-MM-DD'),
-      formatted: moment(new Date()).format('YYYY-MM-DD'),
+        .format('dd-MM-yyyy'),
+      formatted: moment(new Date()).format('dd-MM-yyyy'),
     };
 
     try {
@@ -110,7 +110,7 @@ export const useStocksTableLogic = () => {
   const fetchSpecialDateData = async (stocksList, daysAgo, currencyData) => {
     const formattedDate = moment()
       .subtract(daysAgo, 'days')
-      .format('YYYY-MM-DD');
+      .format('dd-MM-yyyy');
 
     try {
       const fetchPromises = stocksList.map((stock) => {

@@ -12,25 +12,25 @@ export const useTradingViewLogic = () => {
   const getCurrentDate = () => {
     return {
       current: new Date(),
-      formatted: moment(new Date()).format('YYYY-MM-DD'),
+      formatted: moment(new Date()).format('dd-MM-yyyy'),
     };
   };
 
   const getDateRanges = () => {
     const currentDate = new Date();
     return {
-      oneDayAgo: moment().subtract(1, 'days').format('YYYY-MM-DD'),
-      fiveDaysAgo: moment().subtract(5, 'days').format('YYYY-MM-DD'),
-      oneMonthsAgo: moment().subtract(1, 'months').format('YYYY-MM-DD'),
-      sixMonthsAgo: moment().subtract(6, 'months').format('YYYY-MM-DD'),
-      startOfYear: moment().startOf('year').format('YYYY-MM-DD'),
-      oneYearAgo: moment().subtract(1, 'years').format('YYYY-MM-DD'),
+      oneDayAgo: moment().subtract(1, 'days').format('dd-MM-yyyy'),
+      fiveDaysAgo: moment().subtract(5, 'days').format('dd-MM-yyyy'),
+      oneMonthsAgo: moment().subtract(1, 'months').format('dd-MM-yyyy'),
+      sixMonthsAgo: moment().subtract(6, 'months').format('dd-MM-yyyy'),
+      startOfYear: moment().startOf('year').format('dd-MM-yyyy'),
+      oneYearAgo: moment().subtract(1, 'years').format('dd-MM-yyyy'),
       oneWeekYearAgo: moment()
         .subtract(1, 'years')
         .subtract(1, 'weeks')
-        .format('YYYY-MM-DD'),
-      fiveYearsAgo: moment().subtract(5, 'years').format('YYYY-MM-DD'),
-      tenYearsAgo: moment().subtract(10, 'years').format('YYYY-MM-DD'),
+        .format('dd-MM-yyyy'),
+      fiveYearsAgo: moment().subtract(5, 'years').format('dd-MM-yyyy'),
+      tenYearsAgo: moment().subtract(10, 'years').format('dd-MM-yyyy'),
     };
   };
 
@@ -111,7 +111,7 @@ export const useTradingViewLogic = () => {
       convertedChartData = chartData.map((item) => ({
         time:
           selectedTimespan === 'day'
-            ? moment(item?.stock?.t).format('YYYY-MM-DD')
+            ? moment(item?.stock?.t).format('dd-MM-yyyy')
             : Math.floor(item?.stock?.t / 1000),
         value: item?.stock?.o / item?.currency?.o,
       }));
@@ -119,7 +119,7 @@ export const useTradingViewLogic = () => {
       convertedChartData = chartData.map((item) => ({
         time:
           selectedTimespan === 'day'
-            ? moment(item?.t).format('YYYY-MM-DD')
+            ? moment(item?.t).format('dd-MM-yyyy')
             : Math.floor(item?.t / 1000),
         value: item?.o > 1 ? 1 / item?.o : item?.o,
       }));
@@ -127,7 +127,7 @@ export const useTradingViewLogic = () => {
       convertedChartData = chartData.map((item) => ({
         time:
           selectedTimespan === 'day'
-            ? moment(item?.stock?.t).format('YYYY-MM-DD')
+            ? moment(item?.stock?.t).format('dd-MM-yyyy')
             : Math.floor(item?.stock?.t / 1000),
         value: item?.stock?.o / item?.currency?.o,
       }));
