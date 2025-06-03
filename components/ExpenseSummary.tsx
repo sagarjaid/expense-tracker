@@ -194,7 +194,7 @@ const MainCategoryTooltip = ({ active, payload, label }: any) => {
           </p>
         ))}
         <hr className='my-2' />
-        <p className='font-medium'>Total: ₹{total.toFixed(2)}</p>
+        <p className='font-medium'>Total: ₹ {total.toFixed(2)}</p>
       </div>
     );
   }

@@ -177,7 +177,7 @@ function CategoryPieChart({
               />
             ))}
           </Pie>
-          <Tooltip formatter={(value: number) => `₹${value.toFixed(2)}`} />
+          <Tooltip formatter={(value: number) => `${value.toFixed(2)}`} />
           <Legend />
         </PieChart>
       </ResponsiveContainer>
@@ -451,7 +451,7 @@ export default function ExpenseList({
                       <td className='px-2 py-2'>{exp.category}</td>
                       <td className='px-2 py-2'>{exp.subcategory}</td>
                       <td className='px-2 py-2'>
-                        ₹{Number(exp.amount).toFixed(2)}
+                        {Number(exp.amount).toFixed(2)}
                       </td>
                       <td className='px-2 py-2 text-center'>
                         <Button
