@@ -282,6 +282,17 @@ export default function ExpenseSummary() {
         }
       }
 
+      // Calculate totals first
+      data.forEach((exp) => {
+        if (categories.includes(exp.category as Category)) {
+          const amount = Number(exp.amount);
+          const category = exp.category as Category;
+          if (subcategories[category]?.includes(exp.subcategory)) {
+            sums[category][exp.subcategory] += amount;
+          }
+        }
+      });
+
       // Prepare data for the main category stacked bar chart
       const days = eachDayOfInterval({ start: startDate!, end: endDate! });
       const mainCatData = days.map((day) => {
@@ -299,16 +310,13 @@ export default function ExpenseSummary() {
             const amount = Number(exp.amount);
             const category = exp.category as Category;
             dayObj[category] += amount;
-            // Update summary totals
-            if (subcategories[category]?.includes(exp.subcategory)) {
-              sums[category][exp.subcategory] += amount;
-            }
           }
         });
         return dayObj;
       });
       setTotals(sums);
       setMainCatChartData(mainCatData);
+
       // Pie chart data: sum for each main category over the date range
       const pieSums = { Needs: 0, Wants: 0, Investment: 0 };
       data.forEach((exp) => {
@@ -323,6 +331,7 @@ export default function ExpenseSummary() {
           color: categoryColors[cat],
         }))
       );
+
       // Prepare data for the chart
       const dailyData = days.map((day) => {
         const dayExpenses = data.filter((exp) =>
@@ -351,7 +360,6 @@ export default function ExpenseSummary() {
               dayTotal[`${category}-${subcat}`] =
                 (dayTotal[`${category}-${subcat}`] as number) + amount;
               dayTotal.total += amount;
-              sums[category][subcat] += amount;
             }
           }
         });

@@ -27,10 +27,6 @@ export const metadata = getSEOTags({
   description:
     "Compare any asset values directly against Bitcoin's current market price.",
   canonicalUrlRelative: '/',
-  extraTags: {
-    'google-site-verification': 'bpVto528QOEsbHsk4o2dP8yL3DMcQb6kFWjoQUgSoq0',
-    'google-adsense-account': 'ca-pub-8500986101092156',
-  },
 });
 
 export default function RootLayout({ children }: { children: ReactNode }) {
@@ -39,14 +35,6 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       lang='en'
       className={font.className}
       suppressHydrationWarning>
-      <head>
-        <Script
-          async
-          src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8500986101092156'
-          crossOrigin='anonymous'
-          strategy='afterInteractive'
-        />
-      </head>
       <body>
         <ThemeProvider
           attribute='class'
