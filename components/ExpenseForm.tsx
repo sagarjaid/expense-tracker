@@ -108,6 +108,12 @@ export default function ExpenseForm() {
     setLoading(false);
   };
 
+  // Helper to capitalize first letter
+  function capitalizeFirst(str: string) {
+    if (!str) return '';
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  }
+
   return (
     <form
       className='space-y-4'
@@ -115,7 +121,8 @@ export default function ExpenseForm() {
       <VoiceInput
         onResult={(data) => {
           if (data.amount !== undefined) setAmount(data.amount);
-          if (data.description !== undefined) setDescription(data.description);
+          if (data.description !== undefined)
+            setDescription(capitalizeFirst(data.description));
           if (data.category && categoryOptions.includes(data.category)) {
             setCategory(data.category);
             setAddingSubcategory(false);
@@ -145,7 +152,7 @@ export default function ExpenseForm() {
         <Input
           type='text'
           value={description}
-          onChange={(e) => setDescription(e.target.value)}
+          onChange={(e) => setDescription(capitalizeFirst(e.target.value))}
         />
       </div>
       <div>

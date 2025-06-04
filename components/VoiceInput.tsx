@@ -30,6 +30,7 @@ const VoiceInput: React.FC<VoiceInputProps> = ({ onResult }) => {
   const audioChunks = useRef<Blob[]>([]);
   const timerRef = useRef<number | null>(null);
   const countdownRef = useRef<number | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const [mimeType, setMimeType] = useState<string>('');
 
   const startRecording = async () => {
@@ -37,6 +38,7 @@ const VoiceInput: React.FC<VoiceInputProps> = ({ onResult }) => {
     setTimeLeft(30);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
       // Dynamically select supported MIME type
       let selectedMimeType = '';
       if (MediaRecorder.isTypeSupported('audio/webm')) {
@@ -67,6 +69,11 @@ const VoiceInput: React.FC<VoiceInputProps> = ({ onResult }) => {
         }
         if (countdownRef.current) {
           clearInterval(countdownRef.current);
+        }
+        // Stop the audio stream to release the mic
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach((track) => track.stop());
+          streamRef.current = null;
         }
         // Check if any audio was recorded (not just empty chunks)
         const hasAudio = audioChunks.current.some((chunk) => chunk.size > 0);
@@ -124,6 +131,11 @@ const VoiceInput: React.FC<VoiceInputProps> = ({ onResult }) => {
       clearInterval(countdownRef.current);
     }
     mediaRecorderRef.current?.stop();
+    // Stop the audio stream to release the mic
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
     setRecording(false);
     setTimeLeft(30);
   };
@@ -203,7 +215,7 @@ const VoiceInput: React.FC<VoiceInputProps> = ({ onResult }) => {
             height: 250,
             borderRadius: '100%',
             background:
-              'radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,255,255,0.7) 50%, rgba(255,255,255,0.2) 80%, transparent 100%)',
+              'radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,255,255,0.7) 40%, rgba(255,255,255,0.2) 80%, transparent 100%)',
             zIndex: 0,
           }}
         />
