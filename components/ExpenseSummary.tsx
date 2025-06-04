@@ -265,11 +265,20 @@ export default function ExpenseSummary() {
 
       // Calculate totals first
       data.forEach((exp) => {
-        if (categories.includes(exp.category as Category)) {
-          const amount = Number(exp.amount);
-          const category = exp.category as Category;
-          if (subcategories[category]?.includes(exp.subcategory)) {
-            sums[category][exp.subcategory] += amount;
+        const category = (exp.category?.trim() ?? '') as Category;
+        const subcategory = exp.subcategory?.trim() ?? '';
+        if (
+          categories.includes(category) &&
+          Array.isArray(subcategories[category]) &&
+          subcategories[category].some(
+            (s: string) => s.trim().toLowerCase() === subcategory.toLowerCase()
+          )
+        ) {
+          const matchedSubcat = subcategories[category].find(
+            (s: string) => s.trim().toLowerCase() === subcategory.toLowerCase()
+          );
+          if (matchedSubcat) {
+            sums[category][matchedSubcat] += Number(exp.amount);
           }
         }
       });
