@@ -538,13 +538,13 @@ export default function ExpenseSummary() {
                         key={subcat}
                         className='flex justify-between border-b py-1'>
                         <span>{subcat}</span>
-                        <span className='text-muted-foreground'>
+                        <span className='text-sm'>
                           ₹{totals[cat]?.[subcat]?.toFixed(2) || '0.00'}
                         </span>
                       </div>
                     ))}
                   </div>
-                  <div className='mt-2 font-medium text-right'>
+                  <div className='mt-2 font-medium text-sm text-right'>
                     Total: ₹
                     {Object.values(totals[cat] || {})
                       .reduce((a, b) => a + b, 0)

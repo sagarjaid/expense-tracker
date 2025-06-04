@@ -9,6 +9,7 @@ import { DatePicker } from '@/components/ui/date-range-picker';
 import { createClient } from '@/lib/supabase/client';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
+import VoiceInput from './VoiceInput';
 
 const categoryOptions = ['Needs', 'Wants', 'Investment'];
 
@@ -110,6 +111,23 @@ export default function ExpenseForm() {
     <form
       className='space-y-4'
       onSubmit={handleSubmit}>
+      <VoiceInput
+        onResult={(data) => {
+          if (data.amount !== undefined) setAmount(data.amount);
+          if (data.description !== undefined) setDescription(data.description);
+          if (data.category && categoryOptions.includes(data.category)) {
+            setCategory(data.category);
+            setSubcategory(subcategories[data.category][0]);
+          }
+          if (
+            data.subcategory &&
+            subcategories[data.category || category]?.includes(data.subcategory)
+          ) {
+            setSubcategory(data.subcategory);
+          }
+          if (data.date) setDate(data.date);
+        }}
+      />
       <div>
         <label className='block mb-1 font-medium text-sm'>Amount</label>
         <Input

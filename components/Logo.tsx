@@ -48,12 +48,12 @@ const Logo = ({
       <Image
         src={getLogo()}
         alt={`${config.appName} logo`}
-        className={`transition-all duration-300 ${
-          isCollapsed ? 'w-[40px]' : 'w-[130px]'
+        className={`transition-all duration-300 ml-1 ${
+          isCollapsed ? 'w-[40px]' : 'w-[160px]'
         }`}
         priority={priority}
-        width={100}
-        height={50}
+        width={160}
+        height={160}
       />
     </Link>
   );
