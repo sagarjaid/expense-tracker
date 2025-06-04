@@ -21,48 +21,12 @@ import {
   Legend,
   Tooltip,
 } from 'recharts';
+import {
+  fetchSubcategories,
+  subcategories as staticSubcategories,
+} from '@/lib/utils';
 
 const categories = ['All', 'Needs', 'Wants', 'Investment'];
-const subcategories: Record<string, string[]> = {
-  Needs: [
-    'Rent',
-    'Food',
-    'Grocery',
-    'Mobile',
-    'Clothes',
-    'Transport',
-    'Bills',
-    'Health insurance',
-    'TDS',
-    'Shopping',
-    'Grooming',
-    'Lending',
-    'EMI',
-    'Wife',
-    'Other',
-  ],
-  Wants: [
-    'Dining Out',
-    'Entertainment',
-    'Yearly travel plan',
-    'Car/Bike',
-    'New Gadget',
-    'Phone',
-    'Startup',
-    'Other',
-  ],
-  Investment: [
-    'PPF',
-    'NPS',
-    'Term Insurance',
-    'Emergency Fund',
-    'ELSS (MF)',
-    'LIC',
-    'Stocks/Index',
-    'Home',
-    'Other',
-  ],
-};
 
 const monthNames = [
   'January',
@@ -205,6 +169,7 @@ export default function ExpenseList({
   const [subcategory, setSubcategory] = useState<string>('');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [subcategories, setSubcategories] = useState<string[]>([]);
 
   // Update start/end date when month/year changes
   useEffect(() => {
@@ -262,6 +227,21 @@ export default function ExpenseList({
   useEffect(() => {
     fetchExpenses();
   }, [category, subcategory, startDate, endDate]);
+
+  // Fetch subcategories when category changes
+  useEffect(() => {
+    if (category !== 'All') {
+      fetchSubcategories(category).then((subs) => {
+        if (!subs || subs.length === 0) {
+          setSubcategories(staticSubcategories[category] || []);
+        } else {
+          setSubcategories(subs);
+        }
+      });
+    } else {
+      setSubcategories([]);
+    }
+  }, [category]);
 
   // Reset subcategory when category changes
   useEffect(() => {
@@ -341,7 +321,7 @@ export default function ExpenseList({
                 value={subcategory}
                 onChange={(e) => setSubcategory(e.target.value)}>
                 <option value=''>Subcategory</option>
-                {subcategories[category]?.map((subcat) => (
+                {subcategories.map((subcat) => (
                   <option
                     key={subcat}
                     value={subcat}>

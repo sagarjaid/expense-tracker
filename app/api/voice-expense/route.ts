@@ -2,6 +2,11 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { OpenAI } from 'openai';
+import {
+  fetchSubcategories,
+  subcategories as staticSubcategories,
+  categoryOptions,
+} from '@/lib/utils';
 
 const openai = new OpenAI({ apiKey: process.env.NEXT_PUBLIC_OPENAI_KEY! });
 
@@ -27,14 +32,30 @@ export async function POST(req: NextRequest) {
     });
     const text = transcription.text;
 
+    // Dynamically fetch subcategories for each category
+    let needs = await fetchSubcategories('Needs');
+    if (!needs || needs.length === 0) needs = staticSubcategories['Needs'];
+    let wants = await fetchSubcategories('Wants');
+    if (!wants || wants.length === 0) wants = staticSubcategories['Wants'];
+    let investment = await fetchSubcategories('Investment');
+    if (!investment || investment.length === 0)
+      investment = staticSubcategories['Investment'];
+
+    const systemPrompt = `Extract the following fields from the user transcription text and return a JSON object in this format: {amount: number, description: string (1-2 words as label), category: Categories string, subcategory: Subcategories string (if not able to understand, use "Other" but try to understand the subcategory from the text first "Other" is last resort)}. Only return the JSON object, nothing else. Category and subcategory must be from these lists: Categories: ${categoryOptions.join(
+      ', '
+    )}. Subcategories for Needs: ${needs.join(
+      ', '
+    )}. Subcategories for Wants: ${wants.join(
+      ', '
+    )}. Subcategories for Investment: ${investment.join(', ')}.`;
+
     // Now send to OpenAI Chat API to extract structured JSON
     const chatCompletion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
         {
           role: 'system',
-          content:
-            'Extract the following fields from the user transcription text and return a JSON object in this format: {amount: number, description: string (1-2 words as label), category: Categories string, subcategory: Subcategories string (if not able to understand, use "Other" but try to understand the subcategory from the text first "Other" is last resort)}. Only return the JSON object, nothing else. Category and subcategory must be from these lists: Categories: Needs, Wants, Investment. Subcategories for Needs: Rent, Food, Grocery, Mobile, Clothes, Transport, Bills, Health insurance, TDS, Shopping, Grooming, Lending, EMI, Wife, Other. Subcategories for Wants: Dining Out, Entertainment, Yearly travel plan, Car/Bike, New Gadget, Phone, Startup, Other. Subcategories for Investment: PPF, NPS, Term Insurance, Emergency Fund, ELSS (MF), LIC, Stocks/Index, Home, Other.',
+          content: systemPrompt,
         },
         {
           role: 'user',

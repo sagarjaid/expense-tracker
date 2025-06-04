@@ -27,19 +27,18 @@ export const viewport: Viewport = {
 // You can override them in each page passing params to getSOTags() function.
 export const metadata = {
   ...getSEOTags({
-    title:
-      'ex.sagarjaid - Track asset prices in real-time against Bitcoin (BTC)',
+    title: 'Expenslly - Track your expenses in real-time',
     description:
-      "Compare any asset values directly against Bitcoin's current market price.",
+      'Expenslly is a simple and easy to use expense tracker that helps you track your expenses in real-time.',
     canonicalUrlRelative: '/',
   }),
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Expense Tracker',
+    title: 'Expenslly',
   },
-  applicationName: 'Expense Tracker',
+  applicationName: 'Expenslly',
   formatDetection: {
     telephone: false,
   },
@@ -63,7 +62,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
       <head>
         <meta
           name='application-name'
-          content='Expense Tracker'
+          content='Expenslly'
         />
         <meta
           name='apple-mobile-web-app-capable'
@@ -75,7 +74,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         />
         <meta
           name='apple-mobile-web-app-title'
-          content='Expense Tracker'
+          content='Expenslly'
         />
         <meta
           name='format-detection'

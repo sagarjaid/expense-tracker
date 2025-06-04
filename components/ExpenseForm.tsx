@@ -2,7 +2,7 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { DatePicker } from '@/components/ui/date-range-picker';
@@ -10,64 +10,65 @@ import { createClient } from '@/lib/supabase/client';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
 import VoiceInput from './VoiceInput';
-
-const categoryOptions = ['Needs', 'Wants', 'Investment'];
-
-const subcategories: Record<string, string[]> = {
-  Needs: [
-    'Rent',
-    'Food',
-    'Grocery',
-    'Mobile',
-    'Clothes',
-    'Transport',
-    'Bills',
-    'Health insurance',
-    'TDS',
-    'Shopping',
-    'Grooming',
-    'Lending',
-    'EMI',
-    'Wife',
-    'Other',
-  ],
-  Wants: [
-    'Dining Out',
-    'Entertainment',
-    'Yearly travel plan',
-    'Car/Bike',
-    'New Gadget',
-    'Phone',
-    'Startup',
-    'Other',
-  ],
-  Investment: [
-    'PPF',
-    'NPS',
-    'Term Insurance',
-    'Emergency Fund',
-    'ELSS (MF)',
-    'LIC',
-    'Stocks/Index',
-    'Home',
-    'Other',
-  ],
-};
+import {
+  categoryOptions,
+  subcategories as defaultSubcategories,
+} from '@/lib/utils';
 
 export default function ExpenseForm() {
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState(categoryOptions[0]);
   const [subcategory, setSubcategory] = useState(
-    subcategories[categoryOptions[0]][0]
+    defaultSubcategories[categoryOptions[0]][0]
   );
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [loading, setLoading] = useState(false);
+  const [subcategories, setSubcategories] = useState<string[]>([]);
+  const [addingSubcategory, setAddingSubcategory] = useState(false);
+  const [newSubcategory, setNewSubcategory] = useState('');
 
-  // Update subcategory when category changes
+  const fetchSubcategories = useCallback(async (cat: string) => {
+    const supabase = createClient();
+    const { data, error } = await supabase
+      .from('subcategories')
+      .select('name')
+      .eq('category', cat)
+      .order('name', { ascending: true });
+    if (!error && data) {
+      setSubcategories(data.map((row) => row.name));
+    } else {
+      setSubcategories([]); // fallback
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchSubcategories(category);
+  }, [category, fetchSubcategories]);
+
   const handleCategoryChange = (cat: string) => {
     setCategory(cat);
-    setSubcategory(subcategories[cat][0]);
+    setAddingSubcategory(false);
+    setNewSubcategory('');
+    setSubcategory('');
+    fetchSubcategories(cat);
+  };
+
+  const handleAddSubcategory = async () => {
+    const trimmed = newSubcategory.trim();
+    if (!trimmed || subcategories.includes(trimmed)) return;
+    const supabase = createClient();
+    const { error } = await supabase
+      .from('subcategories')
+      .insert([{ category, name: trimmed }]);
+    if (!error) {
+      setSubcategories((prev) => [...prev, trimmed]);
+      setSubcategory(trimmed);
+      setAddingSubcategory(false);
+      setNewSubcategory('');
+    } else {
+      toast.error('Failed to add subcategory');
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -101,7 +102,7 @@ export default function ExpenseForm() {
       setAmount('');
       setDescription('');
       setCategory(categoryOptions[0]);
-      setSubcategory(subcategories[categoryOptions[0]][0]);
+      setSubcategory(defaultSubcategories[categoryOptions[0]][0]);
       setDate(new Date());
     }
     setLoading(false);
@@ -117,12 +118,12 @@ export default function ExpenseForm() {
           if (data.description !== undefined) setDescription(data.description);
           if (data.category && categoryOptions.includes(data.category)) {
             setCategory(data.category);
-            setSubcategory(subcategories[data.category][0]);
+            setAddingSubcategory(false);
+            setNewSubcategory('');
+            setSubcategory('');
+            fetchSubcategories(data.category);
           }
-          if (
-            data.subcategory &&
-            subcategories[data.category || category]?.includes(data.subcategory)
-          ) {
+          if (data.subcategory && subcategories.includes(data.subcategory)) {
             setSubcategory(data.subcategory);
           }
           if (data.date) setDate(data.date);
@@ -167,17 +168,57 @@ export default function ExpenseForm() {
         <label className='block mb-1 font-medium text-sm'>Subcategory</label>
         <select
           className='w-full h-9 rounded-md border px-3 py-1 text-base bg-transparent'
-          value={subcategory}
-          onChange={(e) => setSubcategory(e.target.value)}
+          value={addingSubcategory ? '__add_new__' : subcategory}
+          onChange={(e) => {
+            if (e.target.value === '__add_new__') {
+              setAddingSubcategory(true);
+              setNewSubcategory('');
+            } else {
+              setSubcategory(e.target.value);
+              setAddingSubcategory(false);
+              setNewSubcategory('');
+            }
+          }}
           required>
-          {subcategories[category].map((subcat) => (
+          {subcategories.map((subcat) => (
             <option
               key={subcat}
               value={subcat}>
               {subcat}
             </option>
           ))}
+          <option value='__add_new__'>+ Add new subcategory</option>
         </select>
+        {addingSubcategory && (
+          <div className='flex mt-2 gap-2'>
+            <Input
+              type='text'
+              placeholder='New subcategory'
+              value={newSubcategory}
+              onChange={(e) => setNewSubcategory(e.target.value)}
+              className='flex-1'
+              autoFocus
+            />
+            <Button
+              type='button'
+              onClick={handleAddSubcategory}
+              disabled={
+                !newSubcategory.trim() ||
+                subcategories.includes(newSubcategory.trim())
+              }>
+              Add
+            </Button>
+            <Button
+              type='button'
+              variant='outline'
+              onClick={() => {
+                setAddingSubcategory(false);
+                setNewSubcategory('');
+              }}>
+              Cancel
+            </Button>
+          </div>
+        )}
       </div>
       <div>
         <label className='block mb-1 font-medium text-sm'>Date</label>

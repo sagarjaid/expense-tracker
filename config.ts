@@ -4,10 +4,10 @@ import { ConfigProps } from './types/config';
 
 const config: ConfigProps = {
   // REQUIRED
-  appName: 'ex.sagarjaid',
+  appName: 'Expenslly',
   // REQUIRED: a short description of your app for SEO tags (can be overwritten)
   appDescription:
-    'Compare any asset values directly against Bitcoin current market price.',
+    'Expenslly is a simple and easy to use expense tracker that helps you track your expenses in real-time.',
   // REQUIRED (no https://, not trailing slash at the end, just the naked domain)
   domainName: 'ex.sagarjaid.com',
   crisp: {

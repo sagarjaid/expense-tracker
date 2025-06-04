@@ -21,6 +21,10 @@ import { format, eachDayOfInterval, isSameDay } from 'date-fns';
 import { RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ExportCSVButton from './ExportCSVButton';
+import {
+  fetchSubcategories,
+  subcategories as staticSubcategories,
+} from '@/lib/utils';
 
 const categories = ['Needs', 'Wants', 'Investment'] as const;
 type Category = (typeof categories)[number];
@@ -33,47 +37,6 @@ const initialTotals: TotalsType = {
   Needs: {},
   Wants: {},
   Investment: {},
-};
-
-const subcategories: Record<Category, string[]> = {
-  Needs: [
-    'Rent',
-    'Food',
-    'Grocery',
-    'Mobile',
-    'Clothes',
-    'Transport',
-    'Bills',
-    'Health insurance',
-    'TDS',
-    'Shopping',
-    'Grooming',
-    'Lending',
-    'EMI',
-    'Wife',
-    'Other',
-  ],
-  Wants: [
-    'Dining Out',
-    'Entertainment',
-    'Yearly travel plan',
-    'Car/Bike',
-    'New Gadget',
-    'Phone',
-    'Startup',
-    'Other',
-  ],
-  Investment: [
-    'PPF',
-    'NPS',
-    'Term Insurance',
-    'Emergency Fund',
-    'ELSS (MF)',
-    'LIC',
-    'Stocks/Index',
-    'Home',
-    'Other',
-  ],
 };
 
 const monthNames = [
@@ -105,7 +68,10 @@ const categoryColors: Record<Category, string> = {
 };
 
 // Generate colors for subcategories
-const generateSubcategoryColors = (category: Category) => {
+const generateSubcategoryColors = (
+  category: Category,
+  subcatList: string[]
+) => {
   const baseColors = {
     Needs: [
       '#ef4444',
@@ -157,16 +123,10 @@ const generateSubcategoryColors = (category: Category) => {
     ],
   };
 
-  return subcategories[category].reduce((acc, subcat, index) => {
+  return subcatList.reduce((acc, subcat, index) => {
     acc[subcat] = baseColors[category][index % baseColors[category].length];
     return acc;
   }, {} as Record<string, string>);
-};
-
-const subcategoryColors = {
-  Needs: generateSubcategoryColors('Needs'),
-  Wants: generateSubcategoryColors('Wants'),
-  Investment: generateSubcategoryColors('Investment'),
 };
 
 interface ChartDataPoint {
@@ -220,6 +180,13 @@ export default function ExpenseSummary() {
     { name: string; value: number; color: string }[]
   >([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [subcategories, setSubcategories] = useState<
+    Record<Category, string[]>
+  >({
+    Needs: [],
+    Wants: [],
+    Investment: [],
+  });
 
   // Update start/end date when month/year changes
   useEffect(() => {
@@ -230,6 +197,20 @@ export default function ExpenseSummary() {
     setStartDate(first);
     setEndDate(last);
   }, [selectedYear, selectedMonth]);
+
+  // Fetch subcategories for all categories on mount
+  useEffect(() => {
+    (async () => {
+      let needs = await fetchSubcategories('Needs');
+      if (!needs || needs.length === 0) needs = staticSubcategories['Needs'];
+      let wants = await fetchSubcategories('Wants');
+      if (!wants || wants.length === 0) wants = staticSubcategories['Wants'];
+      let investment = await fetchSubcategories('Investment');
+      if (!investment || investment.length === 0)
+        investment = staticSubcategories['Investment'];
+      setSubcategories({ Needs: needs, Wants: wants, Investment: investment });
+    })();
+  }, []);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
