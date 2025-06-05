@@ -69,7 +69,7 @@ export default function LoginWithGoogle() {
           />
         </svg>
       )}
-      Login with Google
+      Dashboard
     </Button>
   );
 }

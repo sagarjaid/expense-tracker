@@ -13,6 +13,8 @@ import { redirect } from 'next/navigation';
 import config from '@/config';
 import ThemeToggleButton from '@/components/ThemeToggleButton';
 import Logo from '@/components/Logo';
+import heroExpenslly from '@/app/hero-expenslly.png';
+import Image from 'next/image';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,6 +38,15 @@ export default async function Dashboard() {
               <ButtonAccount />
               <ThemeToggleButton />
             </div>
+          </div>
+          <div className='flex justify-center py-20 items-center'>
+            <Image
+              src={heroExpenslly}
+              width={1000}
+              height={1000}
+              className='w-full h-auto'
+              alt='Hero Expenslly'
+            />
           </div>
         </section>
       </main>
