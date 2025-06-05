@@ -1,0 +1,66 @@
+/** @format */
+
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import ButtonAccount from '@/components/ButtonAccount';
+import { Button } from '@/components/ui/button';
+import ExpenseForm from '@/components/ExpenseForm';
+import ExpenseList from '@/components/ExpenseList';
+import ExpenseSummary from '@/components/ExpenseSummary';
+import ExportCSVButton from '@/components/ExportCSVButton';
+import { createClient } from '@/lib/supabase/server';
+import { redirect } from 'next/navigation';
+import config from '@/config';
+import ThemeToggleButton from '@/components/ThemeToggleButton';
+import Logo from '@/components/Logo';
+import heroExpenslly from '@/app/hero-expenslly.png';
+import Image from 'next/image';
+import TodoList from '../../components/TodoList';
+import Link from 'next/link';
+import Header from '../../components/Header';
+
+export const dynamic = 'force-dynamic';
+
+// This is a private page: It's protected by the layout.js component which ensures the user is authenticated.
+// It's a server compoment which means you can fetch data (like the user profile) before the page is rendered.
+// See https://shipfa.st/docs/tutorials/private-page
+export default async function Dashboard() {
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return (
+      <main className='min-h-screen p-4 pb-40'>
+        <section className='max-w-2xl mx-auto space-y-8'>
+          <div className='flex justify-between items-center'>
+            <Logo />
+            <div className='flex items-end justify-end gap-2'>
+              <ButtonAccount />
+              <ThemeToggleButton />
+            </div>
+          </div>
+          <div className='flex justify-center py-20 items-center'>
+            <Image
+              src={heroExpenslly}
+              width={1000}
+              height={1000}
+              className='w-full h-auto'
+              alt='Hero Expenslly'
+            />
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  return (
+    <main className='min-h-screen p-4 pt-0 pb-24'>
+      <section className='max-w-2xl mx-auto space-y-8'>
+        <Header />
+        <TodoList userId={user.id} />
+      </section>
+    </main>
+  );
+}

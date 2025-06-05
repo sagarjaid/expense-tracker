@@ -15,6 +15,7 @@ import ThemeToggleButton from '@/components/ThemeToggleButton';
 import Logo from '@/components/Logo';
 import heroExpenslly from '@/app/hero-expenslly.png';
 import Image from 'next/image';
+import Header from '../components/Header';
 
 export const dynamic = 'force-dynamic';
 
@@ -54,16 +55,9 @@ export default async function Dashboard() {
   }
 
   return (
-    <main className='min-h-screen p-4 pb-24'>
+    <main className='min-h-screen p-4 pt-0 pb-24'>
       <section className='max-w-2xl mx-auto space-y-8'>
-        <div className='flex justify-between items-center'>
-          {/* <h1 className='text-2xl md:text-4xl font-extrabold'>Expenslly</h1> */}
-          <Logo />
-          <div className='flex items-end justify-end gap-2'>
-            <ButtonAccount />
-            <ThemeToggleButton />
-          </div>
-        </div>
+        <Header />
         <Tabs
           defaultValue='all'
           className='w-full'>

@@ -81,8 +81,7 @@ const config: ConfigProps = {
     supportEmail: 'ex.sagarjaid@gmail.com',
   },
   colors: {
-    // The primary color of your app
-    main: 'hsl(var(--primary))',
+    main: '#ffffff',
   },
   auth: {
     // REQUIRED — the path to log in users. It's use to protect private routes (like /dashboard). It's used in apiClient (/libs/api.js) upon 401 errors from our API
