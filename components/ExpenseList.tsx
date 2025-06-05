@@ -170,6 +170,7 @@ export default function ExpenseList({
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [subcategories, setSubcategories] = useState<string[]>([]);
+  const [showDescription, setShowDescription] = useState(false);
 
   // Update start/end date when month/year changes
   useEffect(() => {
@@ -386,6 +387,13 @@ export default function ExpenseList({
                 className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
               />
             </Button>
+            <Button
+              variant={showDescription ? 'default' : 'outline'}
+              size='sm'
+              onClick={() => setShowDescription((v) => !v)}
+              className='flex items-center gap-2'>
+              {showDescription ? 'Hide Description' : 'Show Description'}
+            </Button>
           </div>
         </div>
         {loading ? (
@@ -408,11 +416,26 @@ export default function ExpenseList({
               <table className='min-w-full text-sm'>
                 <thead>
                   <tr className='border'>
-                    <th className='px-2 py-4 text-left'>Date</th>
-                    <th className='px-2 py-4 text-left'>Category</th>
-                    <th className='px-2 py-4 text-left'>Subcategory</th>
-                    <th className='px-2 py-4 text-left'>Amount</th>
-                    <th className='px-2 py-4 text-center'>Delete</th>
+                    <th className='px-3 py-4 text-left whitespace-nowrap'>
+                      Date
+                    </th>
+                    <th className='px-3 py-4 text-left whitespace-nowrap'>
+                      Category
+                    </th>
+                    <th className='px-3 py-4 text-left whitespace-nowrap'>
+                      Subcategory
+                    </th>
+                    <th className='px-3 py-4 text-left whitespace-nowrap'>
+                      Amount
+                    </th>
+                    {showDescription && (
+                      <th className='px-3 py-4 text-left whitespace-nowrap'>
+                        Description
+                      </th>
+                    )}
+                    <th className='px-3 py-4 text-center whitespace-nowrap'>
+                      Delete
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -420,7 +443,7 @@ export default function ExpenseList({
                     <tr
                       key={exp.id}
                       className='border hover:bg-muted/30'>
-                      <td className='p-2'>
+                      <td className='p-3 whitespace-nowrap'>
                         {exp.date
                           ? format(
                               new Date(exp.date + 'T00:00:00'),
@@ -428,12 +451,21 @@ export default function ExpenseList({
                             )
                           : ''}
                       </td>
-                      <td className='px-2 py-2'>{exp.category}</td>
-                      <td className='px-2 py-2'>{exp.subcategory}</td>
-                      <td className='px-2 py-2'>
+                      <td className='px-3 py-2 whitespace-nowrap'>
+                        {exp.category}
+                      </td>
+                      <td className='px-3 py-2 whitespace-nowrap'>
+                        {exp.subcategory}
+                      </td>
+                      <td className='px-3 py-2 whitespace-nowrap'>
                         {Number(exp.amount).toFixed(2)}
                       </td>
-                      <td className='px-2 py-2 text-center'>
+                      {showDescription && (
+                        <td className='px-3 py-2 whitespace-nowrap'>
+                          {exp.description?.trim() ? exp.description : 'NA'}
+                        </td>
+                      )}
+                      <td className='px-3 py-2 text-center whitespace-nowrap'>
                         <Button
                           variant='ghost'
                           size='sm'

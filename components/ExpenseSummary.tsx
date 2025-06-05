@@ -243,45 +243,45 @@ export default function ExpenseSummary() {
       query = query.lte('date', format(endDate, 'yyyy-MM-dd'));
     }
     const { data, error } = await query;
+    console.log('Fetched expenses:', data);
+    console.log('Subcategories object:', subcategories);
     if (error || !data) {
       setTotals(initialTotals);
       setChartData([]);
       setMainCatChartData([]);
       setPieData([]);
     } else {
-      // Calculate totals for the summary table
+      // Use fetched subcategories (with fallback) for summary
+      const normalize = (s: string) => (s || '').trim().toLowerCase();
       const sums: TotalsType = {
         Needs: {},
         Wants: {},
         Investment: {},
       };
-
-      // Initialize subcategory totals
       for (const cat of categories) {
         for (const subcat of subcategories[cat]) {
           sums[cat][subcat] = 0;
         }
       }
-
-      // Calculate totals first
+      // Only sum for subcategories in the final list
       data.forEach((exp) => {
         const category = (exp.category?.trim() ?? '') as Category;
         const subcategory = exp.subcategory?.trim() ?? '';
         if (
           categories.includes(category) &&
-          Array.isArray(subcategories[category]) &&
           subcategories[category].some(
-            (s: string) => s.trim().toLowerCase() === subcategory.toLowerCase()
+            (s) => normalize(s) === normalize(subcategory)
           )
         ) {
           const matchedSubcat = subcategories[category].find(
-            (s: string) => s.trim().toLowerCase() === subcategory.toLowerCase()
+            (s) => normalize(s) === normalize(subcategory)
           );
           if (matchedSubcat) {
             sums[category][matchedSubcat] += Number(exp.amount);
           }
         }
       });
+      setTotals(sums);
 
       // Prepare data for the main category stacked bar chart
       const days = eachDayOfInterval({ start: startDate!, end: endDate! });
@@ -304,7 +304,6 @@ export default function ExpenseSummary() {
         });
         return dayObj;
       });
-      setTotals(sums);
       setMainCatChartData(mainCatData);
 
       // Pie chart data: sum for each main category over the date range

@@ -58,8 +58,7 @@ export async function fetchSubcategories(category: string) {
   const { data, error } = await supabase
     .from('subcategories')
     .select('name')
-    .eq('category', category)
-    .order('name', { ascending: true });
+    .eq('category', category);
   if (error) return [];
   return data.map((row) => row.name);
 }
