@@ -1,7 +1,7 @@
 /** @format */
 
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -187,6 +187,11 @@ export default function ExpenseSummary() {
     Wants: [],
     Investment: [],
   });
+  const mergedSubcategoriesRef = useRef<Record<Category, string[]>>({
+    Needs: [],
+    Wants: [],
+    Investment: [],
+  });
 
   // Update start/end date when month/year changes
   useEffect(() => {
@@ -229,136 +234,174 @@ export default function ExpenseSummary() {
       setChartData([]);
       setMainCatChartData([]);
       setPieData([]);
-      setLoading(false);
-      return;
-    }
-    let query = supabase
-      .from('expenses')
-      .select('amount, category, subcategory, date')
-      .eq('user_id', user.id);
-    if (startDate) {
-      query = query.gte('date', format(startDate, 'yyyy-MM-dd'));
-    }
-    if (endDate) {
-      query = query.lte('date', format(endDate, 'yyyy-MM-dd'));
-    }
-    const { data, error } = await query;
-    console.log('Fetched expenses:', data);
-    console.log('Subcategories object:', subcategories);
-    if (error || !data) {
-      setTotals(initialTotals);
-      setChartData([]);
-      setMainCatChartData([]);
-      setPieData([]);
-    } else {
-      // Use fetched subcategories (with fallback) for summary
-      const normalize = (s: string) => (s || '').trim().toLowerCase();
-      const sums: TotalsType = {
-        Needs: {},
-        Wants: {},
-        Investment: {},
+      mergedSubcategoriesRef.current = {
+        Needs: [...staticSubcategories.Needs],
+        Wants: [...staticSubcategories.Wants],
+        Investment: [...staticSubcategories.Investment],
       };
-      for (const cat of categories) {
-        for (const subcat of subcategories[cat]) {
-          sums[cat][subcat] = 0;
-        }
+    } else {
+      let query = supabase
+        .from('expenses')
+        .select('amount, category, subcategory, date')
+        .eq('user_id', user.id);
+      if (startDate) {
+        query = query.gte('date', format(startDate, 'yyyy-MM-dd'));
       }
-      // Only sum for subcategories in the final list
-      data.forEach((exp) => {
-        const category = (exp.category?.trim() ?? '') as Category;
-        const subcategory = exp.subcategory?.trim() ?? '';
-        if (
-          categories.includes(category) &&
-          subcategories[category].some(
-            (s) => normalize(s) === normalize(subcategory)
-          )
-        ) {
-          const matchedSubcat = subcategories[category].find(
-            (s) => normalize(s) === normalize(subcategory)
-          );
-          if (matchedSubcat) {
-            sums[category][matchedSubcat] += Number(exp.amount);
-          }
-        }
-      });
-      setTotals(sums);
-
-      // Prepare data for the main category stacked bar chart
-      const days = eachDayOfInterval({ start: startDate!, end: endDate! });
-      const mainCatData = days.map((day) => {
-        const dayExpenses = data.filter((exp) =>
-          isSameDay(new Date(exp.date), day)
-        );
-        const dayObj: any = {
-          date: format(day, 'd MMMM'),
-          Needs: 0,
-          Wants: 0,
-          Investment: 0,
+      if (endDate) {
+        query = query.lte('date', format(endDate, 'yyyy-MM-dd'));
+      }
+      const { data, error } = await query;
+      console.log('Fetched expenses:', data);
+      console.log('Subcategories object:', subcategories);
+      if (error || !data) {
+        setTotals(initialTotals);
+        setChartData([]);
+        setMainCatChartData([]);
+        setPieData([]);
+        mergedSubcategoriesRef.current = {
+          Needs: [...staticSubcategories.Needs],
+          Wants: [...staticSubcategories.Wants],
+          Investment: [...staticSubcategories.Investment],
         };
-        dayExpenses.forEach((exp) => {
-          if (categories.includes(exp.category as Category)) {
-            const amount = Number(exp.amount);
-            const category = exp.category as Category;
-            dayObj[category] += amount;
-          }
-        });
-        return dayObj;
-      });
-      setMainCatChartData(mainCatData);
-
-      // Pie chart data: sum for each main category over the date range
-      const pieSums = { Needs: 0, Wants: 0, Investment: 0 };
-      data.forEach((exp) => {
-        if (categories.includes(exp.category as Category)) {
-          pieSums[exp.category as Category] += Number(exp.amount);
-        }
-      });
-      setPieData(
-        categories.map((cat) => ({
-          name: cat,
-          value: pieSums[cat],
-          color: categoryColors[cat],
-        }))
-      );
-
-      // Prepare data for the chart
-      const dailyData = days.map((day) => {
-        const dayExpenses = data.filter((exp) =>
-          isSameDay(new Date(exp.date), day)
-        );
-        const dayTotal: ChartDataPoint = {
-          date: format(day, 'dd/MM'),
-          total: 0,
+      } else {
+        // --- Robust subcategory merging ---
+        const normalize = (s: string) => (s || '').trim().toLowerCase();
+        // Build merged subcategory list for each category
+        const mergedSubcategories: Record<Category, string[]> = {
+          Needs: [],
+          Wants: [],
+          Investment: [],
         };
-
-        // Initialize all subcategory totals for this day
-        categories.forEach((cat) => {
-          subcategories[cat].forEach((subcat) => {
-            dayTotal[`${cat}-${subcat}`] = 0;
+        for (const cat of categories) {
+          const staticList = staticSubcategories[cat] || [];
+          const fetchedList = subcategories[cat] || [];
+          // All subcats from expenses data for this category
+          const dataList = (data || [])
+            .filter((exp) => (exp.category?.trim() ?? '') === cat)
+            .map((exp) => exp.subcategory?.trim() || '')
+            .filter(Boolean);
+          // Merge and dedupe, preserving order: static, then fetched, then data
+          const seen = new Set();
+          mergedSubcategories[cat] = [
+            ...staticList,
+            ...fetchedList,
+            ...dataList,
+          ].filter((subcat) => {
+            const norm = normalize(subcat);
+            if (!norm || seen.has(norm)) return false;
+            seen.add(norm);
+            return true;
           });
-        });
-
-        // Sum up expenses by subcategory for this day
-        dayExpenses.forEach((exp) => {
-          if (categories.includes(exp.category as Category)) {
-            const amount = Number(exp.amount);
-            const category = exp.category as Category;
-            const subcat = exp.subcategory;
-
-            if (subcategories[category]?.includes(subcat)) {
-              dayTotal[`${category}-${subcat}`] =
-                (dayTotal[`${category}-${subcat}`] as number) + amount;
-              dayTotal.total += amount;
+        }
+        mergedSubcategoriesRef.current = mergedSubcategories;
+        // Use mergedSubcategories for summary
+        const sums: TotalsType = {
+          Needs: {},
+          Wants: {},
+          Investment: {},
+        };
+        for (const cat of categories) {
+          for (const subcat of mergedSubcategories[cat]) {
+            sums[cat][subcat] = 0;
+          }
+        }
+        // Sum expenses for all subcategories in merged list
+        data.forEach((exp) => {
+          const category = (exp.category?.trim() ?? '') as Category;
+          const subcategory = exp.subcategory?.trim() ?? '';
+          if (
+            categories.includes(category) &&
+            mergedSubcategories[category].some(
+              (s) => normalize(s) === normalize(subcategory)
+            )
+          ) {
+            const matchedSubcat = mergedSubcategories[category].find(
+              (s) => normalize(s) === normalize(subcategory)
+            );
+            if (matchedSubcat) {
+              sums[category][matchedSubcat] += Number(exp.amount);
             }
           }
         });
+        setTotals(sums);
 
-        return dayTotal;
-      });
+        // Prepare data for the main category stacked bar chart
+        const days = eachDayOfInterval({ start: startDate!, end: endDate! });
+        const mainCatData = days.map((day) => {
+          const dayExpenses = data.filter((exp) =>
+            isSameDay(new Date(exp.date), day)
+          );
+          const dayObj: any = {
+            date: format(day, 'd MMMM'),
+            Needs: 0,
+            Wants: 0,
+            Investment: 0,
+          };
+          dayExpenses.forEach((exp) => {
+            if (categories.includes(exp.category as Category)) {
+              const amount = Number(exp.amount);
+              const category = exp.category as Category;
+              dayObj[category] += amount;
+            }
+          });
+          return dayObj;
+        });
+        setMainCatChartData(mainCatData);
 
-      setChartData(dailyData);
+        // Pie chart data: sum for each main category over the date range
+        const pieSums = { Needs: 0, Wants: 0, Investment: 0 };
+        data.forEach((exp) => {
+          if (categories.includes(exp.category as Category)) {
+            pieSums[exp.category as Category] += Number(exp.amount);
+          }
+        });
+        setPieData(
+          categories.map((cat) => ({
+            name: cat,
+            value: pieSums[cat],
+            color: categoryColors[cat],
+          }))
+        );
+
+        // Prepare data for the chart
+        const dailyData = days.map((day) => {
+          const dayExpenses = data.filter((exp) =>
+            isSameDay(new Date(exp.date), day)
+          );
+          const dayTotal: ChartDataPoint = {
+            date: format(day, 'dd/MM'),
+            total: 0,
+          };
+
+          // Initialize all subcategory totals for this day
+          categories.forEach((cat) => {
+            mergedSubcategories[cat].forEach((subcat) => {
+              dayTotal[`${cat}-${subcat}`] = 0;
+            });
+          });
+
+          // Sum up expenses by subcategory for this day
+          dayExpenses.forEach((exp) => {
+            if (categories.includes(exp.category as Category)) {
+              const amount = Number(exp.amount);
+              const category = exp.category as Category;
+              const subcat = exp.subcategory;
+
+              if (mergedSubcategories[category]?.includes(subcat)) {
+                dayTotal[`${category}-${subcat}`] =
+                  (dayTotal[`${category}-${subcat}`] as number) + amount;
+                dayTotal.total += amount;
+              }
+            }
+          });
+
+          return dayTotal;
+        });
+
+        setChartData(dailyData);
+      }
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   useEffect(() => {
@@ -522,16 +565,18 @@ export default function ExpenseSummary() {
                   className=''>
                   <div className='text-lg font-semibold mb-2'>{cat}</div>
                   <div className='grid grid-cols-1 gap-2'>
-                    {subcategories[cat].map((subcat) => (
-                      <div
-                        key={subcat}
-                        className='flex justify-between border-b py-1'>
-                        <span>{subcat}</span>
-                        <span className='text-sm'>
-                          ₹{totals[cat]?.[subcat]?.toFixed(2) || '0.00'}
-                        </span>
-                      </div>
-                    ))}
+                    {mergedSubcategoriesRef.current[cat].map(
+                      (subcat: string) => (
+                        <div
+                          key={subcat}
+                          className='flex justify-between border-b py-1'>
+                          <span>{subcat}</span>
+                          <span className='text-sm'>
+                            ₹{totals[cat]?.[subcat]?.toFixed(2) || '0.00'}
+                          </span>
+                        </div>
+                      )
+                    )}
                   </div>
                   <div className='mt-2 font-medium text-sm text-right'>
                     Total: ₹
