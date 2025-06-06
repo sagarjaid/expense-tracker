@@ -57,7 +57,14 @@ const monthNames = [
 function getFirstAndLastDayOfMonth(year: number, month: number) {
   const first = new Date(year, month, 1);
   const last = new Date(year, month + 1, 0);
-  return { first, last };
+
+  // Convert to local timezone
+  const firstLocal = new Date(
+    first.getTime() - first.getTimezoneOffset() * 60000
+  );
+  const lastLocal = new Date(last.getTime() - last.getTimezoneOffset() * 60000);
+
+  return { first: firstLocal, last: lastLocal };
 }
 
 // Simplified color mapping for categories
@@ -245,10 +252,16 @@ export default function ExpenseSummary() {
         .select('amount, category, subcategory, date')
         .eq('user_id', user.id);
       if (startDate) {
-        query = query.gte('date', format(startDate, 'yyyy-MM-dd'));
+        const localStartDate = new Date(
+          startDate.getTime() - startDate.getTimezoneOffset() * 60000
+        );
+        query = query.gte('date', format(localStartDate, 'yyyy-MM-dd'));
       }
       if (endDate) {
-        query = query.lte('date', format(endDate, 'yyyy-MM-dd'));
+        const localEndDate = new Date(
+          endDate.getTime() - endDate.getTimezoneOffset() * 60000
+        );
+        query = query.lte('date', format(localEndDate, 'yyyy-MM-dd'));
       }
       const { data, error } = await query;
       console.log('Fetched expenses:', data);

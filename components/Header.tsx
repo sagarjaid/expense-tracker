@@ -26,13 +26,13 @@ export default function Header() {
   }, [menuOpen]);
 
   return (
-    <header className='w-full z-50 bg-background py-2 text-foreground'>
+    <header className='w-full z-50 bg-background py-2 pt-4 text-foreground'>
       <div className='max-w-2xl mx-auto flex flex-row items-center justify-between gap-2 relative'>
         <Logo />
         {/* Desktop menu */}
         <div className='hidden sm:flex flex-row items-center gap-2 w-full sm:w-auto'>
           <Link
-            href='/tasks'
+            href='/todo'
             className='w-fit'>
             <Button
               variant='outline'
@@ -71,7 +71,7 @@ export default function Header() {
                 Home
               </Link>
               <Link
-                href='/list'
+                href='/todo'
                 onClick={() => setMenuOpen(false)}
                 className='cursor-pointer ml-1'>
                 Tasks

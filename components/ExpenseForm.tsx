@@ -84,13 +84,23 @@ export default function ExpenseForm() {
       setLoading(false);
       return;
     }
+
+    // Convert date to local timezone
+    let localDate;
+    if (date) {
+      const userDate = new Date(date);
+      localDate = new Date(
+        userDate.getTime() - userDate.getTimezoneOffset() * 60000
+      );
+    }
+
     const expense = {
       user_id: user.id,
       amount: parseFloat(amount),
       description: description.trim() === '' ? 'NULL' : description,
       category,
       subcategory,
-      date: date ? format(date, 'yyyy-MM-dd') : undefined,
+      date: localDate ? format(localDate, 'yyyy-MM-dd') : undefined,
     };
     console.log(expense, 'expense');
 
