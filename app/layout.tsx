@@ -9,7 +9,6 @@ import GoogleAnalytics from '@/components/GoogleAnalytics';
 import config from '@/config';
 import './globals.css';
 import { ThemeProvider } from '../components/theme-provider';
-import Script from 'next/script';
 
 const font = Bricolage_Grotesque({ subsets: ['latin'] });
 
@@ -86,7 +85,13 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         />
         <meta
           name='theme-color'
-          content={config.colors.main}
+          content='#ffffff'
+          media='(prefers-color-scheme: light)'
+        />
+        <meta
+          name='theme-color'
+          content='#000000'
+          media='(prefers-color-scheme: dark)'
         />
         <link
           rel='apple-touch-icon'

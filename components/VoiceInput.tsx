@@ -6,6 +6,7 @@ import { Mic } from 'lucide-react';
 import wave from '@/app/wave.gif';
 import Image from 'next/image';
 import Wave from './wave';
+import { useTheme } from 'next-themes';
 
 interface VoiceInputProps {
   onResult: (
@@ -22,6 +23,7 @@ interface VoiceInputProps {
 const MAX_RECORDING_TIME = 30000; // 30 seconds
 
 const VoiceInput: React.FC<VoiceInputProps> = ({ onResult }) => {
+  const { theme } = useTheme();
   const [recording, setRecording] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -32,6 +34,13 @@ const VoiceInput: React.FC<VoiceInputProps> = ({ onResult }) => {
   const countdownRef = useRef<number | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [mimeType, setMimeType] = useState<string>('');
+
+  const gradientColor =
+    theme === 'dark' ? 'rgba(0,0,0,1)' : 'rgba(255,255,255,1)';
+  const gradientColor70 =
+    theme === 'dark' ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.7)';
+  const gradientColor20 =
+    theme === 'dark' ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.2)';
 
   const startRecording = async () => {
     setError(null);
@@ -214,8 +223,7 @@ const VoiceInput: React.FC<VoiceInputProps> = ({ onResult }) => {
             width: 250,
             height: 250,
             borderRadius: '100%',
-            background:
-              'radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,255,255,0.7) 40%, rgba(255,255,255,0.2) 80%, transparent 100%)',
+            background: `radial-gradient(circle, ${gradientColor} 0%, ${gradientColor70} 40%, ${gradientColor20} 80%, transparent 100%)`,
             zIndex: 0,
           }}
         />

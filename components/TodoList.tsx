@@ -21,6 +21,7 @@ import {
 } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
 import { useDraggable } from '@dnd-kit/core';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface Todo {
   id: string;
@@ -29,6 +30,7 @@ interface Todo {
   status: boolean;
   created_at: string;
   due_date: string | null;
+  isDefault?: boolean;
 }
 
 interface TodoListProps {
@@ -43,6 +45,12 @@ function formatDate(dateStr: string) {
     year: 'numeric',
     timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   });
+}
+
+function getTodayDate() {
+  const now = new Date();
+  const localDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+  return localDate.toISOString().slice(0, 10);
 }
 
 function groupByDate(todos: Todo[]) {
@@ -77,6 +85,22 @@ function DraggableTask({
       }
     : undefined;
 
+  // Don't make default task draggable
+  if (task.isDefault) {
+    return (
+      <div className='flex items-center gap-2 justify-between text-sm py-1 border-b border-gray-200 px-2 text-gray-400'>
+        <div className='flex items-center gap-2'>
+          <Checkbox
+            checked={task.status}
+            onCheckedChange={() => onToggle(task)}
+            disabled={true}
+          />
+          <span>{task.task}</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <label
       ref={setNodeRef}
@@ -85,11 +109,9 @@ function DraggableTask({
       {...attributes}
       className='flex items-center gap-2 justify-between text-sm py-1 border-b border-gray-200 px-2 cursor-move hover:bg-gray-50'>
       <div className='flex items-center gap-2'>
-        <input
-          type='checkbox'
+        <Checkbox
           checked={task.status}
-          onChange={() => onToggle(task)}
-          className='w-4 h-4 accent-black cursor-pointer'
+          onCheckedChange={() => onToggle(task)}
           disabled={loading}
         />
         <span
@@ -164,13 +186,49 @@ export default function TodoList({ userId }: TodoListProps) {
 
   async function fetchTodos() {
     setLoading(true);
+    const today = getTodayDate();
+
+    // First fetch existing todos
     const { data, error } = await supabase
       .from('todos')
       .select('*')
       .eq('user_id', userId)
       .order('due_date', { ascending: false })
       .order('created_at', { ascending: false });
-    if (!error && data) setTodos(data);
+
+    if (!error && data) {
+      // Check if we have any 'Add todo for the day' task for today
+      const hasTodayDefaultTask = data.some(
+        (todo) =>
+          todo.due_date === today && todo.task === 'Add to-do for the day'
+      );
+
+      // If no default task for today, add it and then refetch
+      if (!hasTodayDefaultTask) {
+        await supabase.from('todos').insert([
+          {
+            user_id: userId,
+            task: 'Add to-do for the day',
+            status: false,
+            due_date: today,
+          },
+        ]);
+        // Refetch after insert to avoid duplicates
+        const { data: newData, error: newError } = await supabase
+          .from('todos')
+          .select('*')
+          .eq('user_id', userId)
+          .order('due_date', { ascending: false })
+          .order('created_at', { ascending: false });
+        if (!newError && newData) {
+          setTodos(newData);
+        } else {
+          setTodos(data);
+        }
+      } else {
+        setTodos(data);
+      }
+    }
     setLoading(false);
     setInitialLoad(false);
   }
@@ -195,6 +253,9 @@ export default function TodoList({ userId }: TodoListProps) {
   }
 
   async function toggleStatus(todo: Todo) {
+    // Don't handle default task in DB
+    if (todo.isDefault) return;
+
     toast.promise(
       (async () => {
         await supabase
@@ -212,6 +273,9 @@ export default function TodoList({ userId }: TodoListProps) {
   }
 
   async function deleteTask(id: string) {
+    // Don't handle default task in DB
+    if (id === 'default-task') return;
+
     toast.promise(
       (async () => {
         await supabase.from('todos').delete().eq('id', id);
@@ -238,6 +302,37 @@ export default function TodoList({ userId }: TodoListProps) {
         loading: 'Moving task...',
         success: 'Task moved!',
         error: 'Failed to move task',
+      }
+    );
+  }
+
+  async function moveAllPendingToToday() {
+    const today = getTodayDate();
+    const pendingTasks = todos.filter(
+      (todo) => !todo.status && todo.due_date !== today && !todo.isDefault
+    );
+
+    if (pendingTasks.length === 0) {
+      toast('No pending tasks to move');
+      return;
+    }
+
+    toast.promise(
+      (async () => {
+        // Update each task individually to ensure proper update
+        for (const task of pendingTasks) {
+          await supabase
+            .from('todos')
+            .update({ due_date: today })
+            .eq('id', task.id)
+            .eq('user_id', userId);
+        }
+        await fetchTodos();
+      })(),
+      {
+        loading: 'Moving tasks...',
+        success: 'All pending tasks moved to today!',
+        error: 'Failed to move tasks',
       }
     );
   }
@@ -284,12 +379,23 @@ export default function TodoList({ userId }: TodoListProps) {
               <DateSection
                 key={date}
                 date={date}>
-                <div className='text-xl font-bold mb-2'>
-                  {date === today
-                    ? `Today (${formatDate(today)})`
-                    : date === yesterday
-                    ? `Yesterday (${formatDate(yesterday)})`
-                    : formatDate(date)}
+                <div className='text-xl font-bold mb-2 flex items-center justify-between'>
+                  <span>
+                    {date === today
+                      ? `Today (${formatDate(today)})`
+                      : date === yesterday
+                      ? `Yesterday (${formatDate(yesterday)})`
+                      : formatDate(date)}
+                  </span>
+                  {date === today && (
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      onClick={moveAllPendingToToday}
+                      className='text-xs'>
+                      Move Pending Tasks
+                    </Button>
+                  )}
                 </div>
                 <div className='py-2'>
                   {tasks
@@ -337,7 +443,7 @@ export default function TodoList({ userId }: TodoListProps) {
       <div className='relative max-w-2xl mx-auto'>
         <form
           onSubmit={addTodo}
-          className='fixed bottom-0 left-1/2 -translate-x-1/2 flex gap-2 bg-background border-t p-4 z-50 w-full max-w-2xl'
+          className='fixed bottom-0 left-1/2 -translate-x-1/2 flex gap-2 bg-background border-t p-4 pb-8 z-50 w-full max-w-2xl'
           style={{ margin: 0 }}>
           <Input
             ref={inputRef}

@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
 
     // Now send to OpenAI Chat API to extract structured JSON
     const chatCompletion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+      model: 'gpt-4',
       messages: [
         {
           role: 'system',

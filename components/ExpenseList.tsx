@@ -402,7 +402,6 @@ export default function ExpenseList({
             </Button>
             <Button
               variant={showDescription ? 'default' : 'outline'}
-              size='sm'
               onClick={() => setShowDescription((v) => !v)}
               className='flex items-center gap-2'>
               {showDescription ? 'Hide Description' : 'Show Description'}
