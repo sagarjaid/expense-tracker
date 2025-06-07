@@ -53,6 +53,13 @@ function getTodayDate() {
   return localDate.toISOString().slice(0, 10);
 }
 
+const DEFAULT_TASKS = [
+  'Take a shower',
+  'Only 1 Project - AIPM',
+  'Believability weightage',
+  'Avoid Money Loss',
+];
+
 function groupByDate(todos: Todo[]) {
   return todos.reduce((acc, todo) => {
     const dateKey = todo.due_date || formatDate(todo.created_at);
@@ -84,22 +91,6 @@ function DraggableTask({
         transform: CSS.Translate.toString(transform),
       }
     : undefined;
-
-  // Don't make default task draggable
-  if (task.isDefault) {
-    return (
-      <div className='flex items-center gap-2 justify-between text-sm py-1 border-b border-gray-200 px-2 text-gray-400'>
-        <div className='flex items-center gap-2'>
-          <Checkbox
-            checked={task.status}
-            onCheckedChange={() => onToggle(task)}
-            disabled={true}
-          />
-          <span>{task.task}</span>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <label
@@ -188,7 +179,7 @@ export default function TodoList({ userId }: TodoListProps) {
     setLoading(true);
     const today = getTodayDate();
 
-    // First fetch existing todos
+    // Fetch all todos for the user
     const { data, error } = await supabase
       .from('todos')
       .select('*')
@@ -197,23 +188,25 @@ export default function TodoList({ userId }: TodoListProps) {
       .order('created_at', { ascending: false });
 
     if (!error && data) {
-      // Check if we have any 'Add todo for the day' task for today
-      const hasTodayDefaultTask = data.some(
-        (todo) =>
-          todo.due_date === today && todo.task === 'Add to-do for the day'
+      // Find which default tasks are missing for today
+      const todayTasks = data.filter((todo) => todo.due_date === today);
+      const missingDefaults = DEFAULT_TASKS.filter(
+        (defaultTask) => !todayTasks.some((todo) => todo.task === defaultTask)
       );
 
-      // If no default task for today, add it and then refetch
-      if (!hasTodayDefaultTask) {
-        await supabase.from('todos').insert([
-          {
-            user_id: userId,
-            task: 'Add to-do for the day',
-            status: false,
-            due_date: today,
-          },
-        ]);
-        // Refetch after insert to avoid duplicates
+      // Insert only missing default tasks
+      if (missingDefaults.length > 0) {
+        const defaultTasksToAdd = missingDefaults.map((task) => ({
+          user_id: userId,
+          task,
+          status: false,
+          due_date: today,
+        }));
+        const { data: insertData, error: insertError } = await supabase
+          .from('todos')
+          .insert(defaultTasksToAdd);
+        console.log('Inserted default tasks:', insertData, insertError);
+        // Refetch after insert
         const { data: newData, error: newError } = await supabase
           .from('todos')
           .select('*')
@@ -253,9 +246,6 @@ export default function TodoList({ userId }: TodoListProps) {
   }
 
   async function toggleStatus(todo: Todo) {
-    // Don't handle default task in DB
-    if (todo.isDefault) return;
-
     toast.promise(
       (async () => {
         await supabase
@@ -273,9 +263,6 @@ export default function TodoList({ userId }: TodoListProps) {
   }
 
   async function deleteTask(id: string) {
-    // Don't handle default task in DB
-    if (id === 'default-task') return;
-
     toast.promise(
       (async () => {
         await supabase.from('todos').delete().eq('id', id);
@@ -309,7 +296,7 @@ export default function TodoList({ userId }: TodoListProps) {
   async function moveAllPendingToToday() {
     const today = getTodayDate();
     const pendingTasks = todos.filter(
-      (todo) => !todo.status && todo.due_date !== today && !todo.isDefault
+      (todo) => !todo.status && todo.due_date !== today
     );
 
     if (pendingTasks.length === 0) {

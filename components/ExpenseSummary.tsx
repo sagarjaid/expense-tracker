@@ -25,6 +25,8 @@ import {
   fetchSubcategories,
   subcategories as staticSubcategories,
 } from '@/lib/utils';
+import StartingBalance from './StartingBalance';
+import BalanceSummaryBar from './BalanceSummaryBar';
 
 const categories = ['Needs', 'Wants', 'Investment'] as const;
 type Category = (typeof categories)[number];
@@ -194,6 +196,7 @@ export default function ExpenseSummary() {
     Wants: [],
     Investment: [],
   });
+  const [startingBalance, setStartingBalance] = useState<number | null>(null);
   const mergedSubcategoriesRef = useRef<Record<Category, string[]>>({
     Needs: [],
     Wants: [],
@@ -241,12 +244,24 @@ export default function ExpenseSummary() {
       setChartData([]);
       setMainCatChartData([]);
       setPieData([]);
+      setStartingBalance(null);
       mergedSubcategoriesRef.current = {
         Needs: [...staticSubcategories.Needs],
         Wants: [...staticSubcategories.Wants],
         Investment: [...staticSubcategories.Investment],
       };
     } else {
+      // Fetch starting balance
+      const { data: balanceData } = await supabase
+        .from('monthly_balances')
+        .select('amount')
+        .eq('user_id', user.id)
+        .eq('month', selectedMonth)
+        .eq('year', selectedYear)
+        .single();
+
+      setStartingBalance(balanceData?.amount || null);
+
       let query = supabase
         .from('expenses')
         .select('amount, category, subcategory, date')
@@ -413,8 +428,8 @@ export default function ExpenseSummary() {
 
         setChartData(dailyData);
       }
-      setLoading(false);
     }
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -463,7 +478,6 @@ export default function ExpenseSummary() {
               ))}
             </select>
           </div>
-
           <div className='flex items-center gap-2'>
             <ExportCSVButton />
             <Button
@@ -480,6 +494,16 @@ export default function ExpenseSummary() {
         </div>
       </CardHeader>
       <CardContent>
+        {/* Editable Starting Balance */}
+        <StartingBalance
+          selectedMonth={selectedMonth}
+          selectedYear={selectedYear}
+        />
+        {/* Balance Summary Bar */}
+        <BalanceSummaryBar
+          selectedMonth={selectedMonth}
+          selectedYear={selectedYear}
+        />
         {/* Tabs */}
         <div className='flex border-b'>
           <div

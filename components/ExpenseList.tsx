@@ -1,7 +1,7 @@
 /** @format */
 
 'use client';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { DatePicker } from '@/components/ui/date-range-picker';
@@ -25,6 +25,7 @@ import {
   fetchSubcategories,
   subcategories as staticSubcategories,
 } from '@/lib/utils';
+import BalanceSummaryBar from './BalanceSummaryBar';
 
 const categories = ['All', 'Needs', 'Wants', 'Investment'];
 
@@ -178,6 +179,7 @@ export default function ExpenseList({
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [subcategories, setSubcategories] = useState<string[]>([]);
   const [showDescription, setShowDescription] = useState(false);
+  const [popoverOpen, setPopoverOpen] = useState(false);
 
   // Update start/end date when month/year changes
   useEffect(() => {
@@ -288,6 +290,12 @@ export default function ExpenseList({
   return (
     <Card className='mt-4'>
       <CardContent className='p-4'>
+        {category === 'All' && (
+          <BalanceSummaryBar
+            selectedMonth={selectedMonth}
+            selectedYear={selectedYear}
+          />
+        )}
         <div className='flex flex-wrap gap-4 mb-4 items-center justify-between'>
           <div className='flex flex-wrap gap-4 items-center'>
             <select
@@ -344,18 +352,21 @@ export default function ExpenseList({
                 ))}
               </select>
             )}
-            <Popover>
+            <Button
+              variant={showDescription ? 'default' : 'outline'}
+              onClick={() => setShowDescription((v) => !v)}
+              className='flex items-center gap-2'>
+              {showDescription ? 'Hide Description' : 'Show Description'}
+            </Button>
+
+            <Popover
+              open={popoverOpen}
+              onOpenChange={setPopoverOpen}>
               <PopoverTrigger asChild>
                 <Button
                   variant='outline'
-                  className='h-9 px-3 py-1'>
-                  <CalendarIcon className='h-4 w-4 mr-2' />
-                  {startDate && endDate
-                    ? `${format(startDate, 'dd/MM/yyyy')} - ${format(
-                        endDate,
-                        'dd/MM/yyyy'
-                      )}`
-                    : 'Select Dates'}
+                  className='h-9 px-3 py-1 flex items-center justify-center'>
+                  <CalendarIcon className='h-4 w-4' />
                 </Button>
               </PopoverTrigger>
               <PopoverContent
@@ -376,16 +387,25 @@ export default function ExpenseList({
                       onDateChange={setEndDate}
                     />
                   </div>
-                  <Button
-                    type='button'
-                    variant='outline'
-                    className='w-full'
-                    onClick={() => {
-                      setStartDate(undefined);
-                      setEndDate(undefined);
-                    }}>
-                    Clear
-                  </Button>
+                  <div className='flex gap-2'>
+                    <Button
+                      type='button'
+                      variant='default'
+                      className='w-full'
+                      onClick={() => setPopoverOpen(false)}>
+                      Done
+                    </Button>
+                    <Button
+                      type='button'
+                      variant='outline'
+                      className='w-full'
+                      onClick={() => {
+                        setStartDate(undefined);
+                        setEndDate(undefined);
+                      }}>
+                      Clear
+                    </Button>
+                  </div>
                 </div>
               </PopoverContent>
             </Popover>
@@ -399,12 +419,6 @@ export default function ExpenseList({
               <RefreshCw
                 className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
               />
-            </Button>
-            <Button
-              variant={showDescription ? 'default' : 'outline'}
-              onClick={() => setShowDescription((v) => !v)}
-              className='flex items-center gap-2'>
-              {showDescription ? 'Hide Description' : 'Show Description'}
             </Button>
           </div>
         </div>

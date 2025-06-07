@@ -112,7 +112,7 @@ export default async function Dashboard() {
           <TabsContent value='summary'>
             <Card>
               <CardHeader>
-                <CardTitle>Expense Summary</CardTitle>
+                <CardTitle>Monthly Summary</CardTitle>
               </CardHeader>
               <CardContent>
                 <ExpenseSummary />
