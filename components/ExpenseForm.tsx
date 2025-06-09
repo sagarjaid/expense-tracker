@@ -15,18 +15,53 @@ import {
   subcategories as defaultSubcategories,
 } from '@/lib/utils';
 
-export default function ExpenseForm() {
-  const [amount, setAmount] = useState('');
-  const [description, setDescription] = useState('');
-  const [category, setCategory] = useState(categoryOptions[0]);
-  const [subcategory, setSubcategory] = useState(
-    defaultSubcategories[categoryOptions[0]][0]
+interface ExpenseFormProps {
+  initialValues?: {
+    amount: string;
+    description: string;
+    category: string;
+    subcategory: string;
+    date: Date | undefined;
+  };
+  onSubmit?: (formData: {
+    amount: string;
+    description: string;
+    category: string;
+    subcategory: string;
+    date: Date | undefined;
+  }) => Promise<void>;
+  loading?: boolean;
+  submitLabel?: string;
+  showVoiceInput?: boolean;
+}
+
+export default function ExpenseForm({
+  initialValues,
+  onSubmit,
+  loading: externalLoading,
+  submitLabel = 'Add Expense',
+  showVoiceInput = true,
+}: ExpenseFormProps) {
+  const [amount, setAmount] = useState(initialValues?.amount || '');
+  const [description, setDescription] = useState(
+    initialValues?.description || ''
   );
-  const [date, setDate] = useState<Date | undefined>(new Date());
-  const [loading, setLoading] = useState(false);
+  const [category, setCategory] = useState(
+    initialValues?.category || categoryOptions[0]
+  );
+  const [subcategory, setSubcategory] = useState(
+    initialValues?.subcategory || defaultSubcategories[categoryOptions[0]][0]
+  );
+  const [date, setDate] = useState<Date | undefined>(
+    initialValues?.date || new Date()
+  );
+  const [internalLoading, setInternalLoading] = useState(false);
   const [subcategories, setSubcategories] = useState<string[]>([]);
   const [addingSubcategory, setAddingSubcategory] = useState(false);
   const [newSubcategory, setNewSubcategory] = useState('');
+
+  const loading =
+    externalLoading !== undefined ? externalLoading : internalLoading;
 
   const fetchSubcategories = useCallback(async (cat: string) => {
     const supabase = createClient();
@@ -73,7 +108,19 @@ export default function ExpenseForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+
+    if (onSubmit) {
+      await onSubmit({
+        amount,
+        description,
+        category,
+        subcategory,
+        date,
+      });
+      return;
+    }
+
+    setInternalLoading(true);
     const supabase = createClient();
     const {
       data: { user },
@@ -81,7 +128,7 @@ export default function ExpenseForm() {
     } = await supabase.auth.getUser();
     if (!user || userError) {
       toast.error('User not authenticated.');
-      setLoading(false);
+      setInternalLoading(false);
       return;
     }
 
@@ -102,7 +149,6 @@ export default function ExpenseForm() {
       subcategory,
       date: localDate ? format(localDate, 'yyyy-MM-dd') : undefined,
     };
-    console.log(expense, 'expense');
 
     const { error } = await supabase.from('expenses').insert([expense]);
     if (error) {
@@ -115,7 +161,7 @@ export default function ExpenseForm() {
       setSubcategory(defaultSubcategories[categoryOptions[0]][0]);
       setDate(new Date());
     }
-    setLoading(false);
+    setInternalLoading(false);
   };
 
   // Helper to capitalize first letter
@@ -128,24 +174,26 @@ export default function ExpenseForm() {
     <form
       className='space-y-4'
       onSubmit={handleSubmit}>
-      <VoiceInput
-        onResult={(data) => {
-          if (data.amount !== undefined) setAmount(data.amount);
-          if (data.description !== undefined)
-            setDescription(capitalizeFirst(data.description));
-          if (data.category && categoryOptions.includes(data.category)) {
-            setCategory(data.category);
-            setAddingSubcategory(false);
-            setNewSubcategory('');
-            setSubcategory('');
-            fetchSubcategories(data.category);
-          }
-          if (data.subcategory && subcategories.includes(data.subcategory)) {
-            setSubcategory(data.subcategory);
-          }
-          if (data.date) setDate(data.date);
-        }}
-      />
+      {showVoiceInput && (
+        <VoiceInput
+          onResult={(data) => {
+            if (data.amount !== undefined) setAmount(data.amount);
+            if (data.description !== undefined)
+              setDescription(capitalizeFirst(data.description));
+            if (data.category && categoryOptions.includes(data.category)) {
+              setCategory(data.category);
+              setAddingSubcategory(false);
+              setNewSubcategory('');
+              setSubcategory('');
+              fetchSubcategories(data.category);
+            }
+            if (data.subcategory && subcategories.includes(data.subcategory)) {
+              setSubcategory(data.subcategory);
+            }
+            if (data.date) setDate(data.date);
+          }}
+        />
+      )}
       <div>
         <label className='block mb-1 font-medium text-sm'>Amount</label>
         <Input
@@ -247,7 +295,7 @@ export default function ExpenseForm() {
       <Button
         type='submit'
         disabled={loading}>
-        {loading ? 'Adding...' : 'Add Expense'}
+        {loading ? 'Saving...' : submitLabel}
       </Button>
     </form>
   );

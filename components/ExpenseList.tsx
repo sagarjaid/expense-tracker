@@ -12,7 +12,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { CalendarIcon, RefreshCw, Trash2 } from 'lucide-react';
+import { CalendarIcon, RefreshCw, Trash2, Pencil } from 'lucide-react';
 import {
   PieChart,
   Pie,
@@ -26,6 +26,7 @@ import {
   subcategories as staticSubcategories,
 } from '@/lib/utils';
 import BalanceSummaryBar from './BalanceSummaryBar';
+import EditExpenseModal from './EditExpenseModal';
 
 const categories = ['All', 'Needs', 'Wants', 'Investment'];
 
@@ -180,6 +181,7 @@ export default function ExpenseList({
   const [subcategories, setSubcategories] = useState<string[]>([]);
   const [showDescription, setShowDescription] = useState(false);
   const [popoverOpen, setPopoverOpen] = useState(false);
+  const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
 
   // Update start/end date when month/year changes
   useEffect(() => {
@@ -287,232 +289,268 @@ export default function ExpenseList({
     setDeletingId(null);
   };
 
+  const handleEdit = (id: string) => {
+    const expense = expenses.find((exp) => exp.id === id);
+    if (expense) {
+      setEditingExpense(expense);
+    }
+  };
+
+  const handleEditSuccess = () => {
+    setEditingExpense(null);
+    fetchExpenses();
+  };
+
   return (
-    <Card className='mt-4'>
-      <CardContent className='p-4'>
-        {category === 'All' && (
-          <BalanceSummaryBar
-            selectedMonth={selectedMonth}
-            selectedYear={selectedYear}
-          />
-        )}
-        <div className='flex flex-wrap gap-4 mb-4 items-center justify-between'>
-          <div className='flex flex-wrap gap-4 items-center'>
-            <select
-              className='w-fit h-9 rounded-md border px-3 py-1 text-base bg-transparent'
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(Number(e.target.value))}>
-              {monthNames.map((name, idx) => (
-                <option
-                  key={name}
-                  value={idx}>
-                  {name}
-                </option>
-              ))}
-            </select>
-            {/* <select
-              className='h-9 rounded-md border px-3 py-1 text-base bg-transparent'
-              value={selectedYear}
-              onChange={(e) => setSelectedYear(Number(e.target.value))}>
-              {yearOptions.map((y) => (
-                <option
-                  key={y}
-                  value={y}>
-                  {y}
-                </option>
-              ))}
-            </select> */}
-
-            {category === 'All' && (
+    <>
+      <Card className='mt-4'>
+        <CardContent className='p-4'>
+          {category === 'All' && (
+            <BalanceSummaryBar
+              selectedMonth={selectedMonth}
+              selectedYear={selectedYear}
+            />
+          )}
+          <div className='flex flex-wrap gap-4 mb-4 items-center justify-between'>
+            <div className='flex flex-wrap gap-4 items-center'>
               <select
-                className='w-36 h-9 rounded-md border px-2 py-1 text-base bg-transparent'
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}>
-                {categories.map((cat) => (
+                className='w-fit h-9 rounded-md border px-3 py-1 text-base bg-transparent'
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(Number(e.target.value))}>
+                {monthNames.map((name, idx) => (
                   <option
-                    key={cat}
-                    value={cat}>
-                    {cat}
+                    key={name}
+                    value={idx}>
+                    {name}
                   </option>
                 ))}
               </select>
-            )}
-            {category !== 'All' && (
-              <select
-                className='w-36 h-9 rounded-md border px-2 py-1 text-base bg-transparent'
-                value={subcategory}
-                onChange={(e) => setSubcategory(e.target.value)}>
-                <option value=''>Subcategory</option>
-                {subcategories.map((subcat) => (
+              {/* <select
+                className='h-9 rounded-md border px-3 py-1 text-base bg-transparent'
+                value={selectedYear}
+                onChange={(e) => setSelectedYear(Number(e.target.value))}>
+                {yearOptions.map((y) => (
                   <option
-                    key={subcat}
-                    value={subcat}>
-                    {subcat}
+                    key={y}
+                    value={y}>
+                    {y}
                   </option>
                 ))}
-              </select>
-            )}
-            <Button
-              variant={showDescription ? 'default' : 'outline'}
-              onClick={() => setShowDescription((v) => !v)}
-              className='flex items-center gap-2'>
-              {showDescription ? 'Hide Description' : 'Show Description'}
-            </Button>
+              </select> */}
 
-            <Popover
-              open={popoverOpen}
-              onOpenChange={setPopoverOpen}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant='outline'
-                  className='h-9 px-3 py-1 flex items-center justify-center'>
-                  <CalendarIcon className='h-4 w-4' />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent
-                className='w-auto p-4'
-                align='start'>
-                <div className='flex flex-col gap-4 justify-end'>
-                  <div className='flex gap-2 items-center justify-end'>
-                    <span className='text-sm'>From:</span>
-                    <DatePicker
-                      date={startDate}
-                      onDateChange={setStartDate}
-                    />
-                  </div>
-                  <div className='flex gap-2 items-center justify-end'>
-                    <span className='text-sm'>To:</span>
-                    <DatePicker
-                      date={endDate}
-                      onDateChange={setEndDate}
-                    />
-                  </div>
-                  <div className='flex gap-2'>
-                    <Button
-                      type='button'
-                      variant='default'
-                      className='w-full'
-                      onClick={() => setPopoverOpen(false)}>
-                      Done
-                    </Button>
-                    <Button
-                      type='button'
-                      variant='outline'
-                      className='w-full'
-                      onClick={() => {
-                        setStartDate(undefined);
-                        setEndDate(undefined);
-                      }}>
-                      Clear
-                    </Button>
-                  </div>
-                </div>
-              </PopoverContent>
-            </Popover>
-
-            <Button
-              variant='outline'
-              size='sm'
-              onClick={handleRefresh}
-              disabled={isRefreshing || loading}
-              className='flex items-center gap-2'>
-              <RefreshCw
-                className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
-              />
-            </Button>
-          </div>
-        </div>
-        {loading ? (
-          <div className='text-center py-8'>Loading...</div>
-        ) : expenses.length === 0 ? (
-          <div className='text-center py-8'>No expenses found.</div>
-        ) : (
-          <>
-            {category !== 'All' && (
-              <div className='mb-8'>
-                <Card className='p-4'>
-                  <CategoryPieChart
-                    expenses={expenses}
-                    category={category}
-                  />
-                </Card>
-              </div>
-            )}
-            <div className='overflow-x-auto'>
-              <table className='min-w-full text-sm'>
-                <thead>
-                  <tr className='border'>
-                    <th className='px-3 py-4 text-left whitespace-nowrap'>
-                      Date
-                    </th>
-                    <th className='px-3 py-4 text-left whitespace-nowrap'>
-                      Category
-                    </th>
-                    <th className='px-3 py-4 text-left whitespace-nowrap'>
-                      Subcategory
-                    </th>
-                    <th className='px-3 py-4 text-left whitespace-nowrap'>
-                      Amount
-                    </th>
-                    {showDescription && (
-                      <th className='px-3 py-4 text-left whitespace-nowrap'>
-                        Description
-                      </th>
-                    )}
-                    <th className='px-3 py-4 text-center whitespace-nowrap'>
-                      Delete
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {expenses.map((exp) => (
-                    <tr
-                      key={exp.id}
-                      className='border hover:bg-muted/30'>
-                      <td className='p-3 whitespace-nowrap'>
-                        {exp.date
-                          ? format(
-                              new Date(exp.date + 'T00:00:00'),
-                              'dd/MM/yyyy'
-                            )
-                          : ''}
-                      </td>
-                      <td className='px-3 py-2 whitespace-nowrap'>
-                        {exp.category}
-                      </td>
-                      <td className='px-3 py-2 whitespace-nowrap'>
-                        {exp.subcategory}
-                      </td>
-                      <td className='px-3 py-2 whitespace-nowrap'>
-                        {Number(exp.amount).toFixed(2)}
-                      </td>
-                      {showDescription && (
-                        <td className='px-3 py-2 whitespace-nowrap'>
-                          {exp.description?.trim() ? exp.description : 'NA'}
-                        </td>
-                      )}
-                      <td className='px-3 py-2 text-center whitespace-nowrap'>
-                        <Button
-                          variant='ghost'
-                          size='sm'
-                          onClick={() => handleDelete(exp.id)}
-                          disabled={deletingId === exp.id}
-                          className='h-8 w-8 p-0 hover:bg-destructive hover:text-destructive-foreground'>
-                          <Trash2
-                            className={`h-4 w-4 ${
-                              deletingId === exp.id ? 'animate-pulse' : ''
-                            }`}
-                          />
-                        </Button>
-                      </td>
-                    </tr>
+              {category === 'All' && (
+                <select
+                  className='w-36 h-9 rounded-md border px-2 py-1 text-base bg-transparent'
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}>
+                  {categories.map((cat) => (
+                    <option
+                      key={cat}
+                      value={cat}>
+                      {cat}
+                    </option>
                   ))}
-                </tbody>
-              </table>
+                </select>
+              )}
+              {category !== 'All' && (
+                <select
+                  className='w-36 h-9 rounded-md border px-2 py-1 text-base bg-transparent'
+                  value={subcategory}
+                  onChange={(e) => setSubcategory(e.target.value)}>
+                  <option value=''>Subcategory</option>
+                  {subcategories.map((subcat) => (
+                    <option
+                      key={subcat}
+                      value={subcat}>
+                      {subcat}
+                    </option>
+                  ))}
+                </select>
+              )}
+              <Button
+                variant={showDescription ? 'default' : 'outline'}
+                onClick={() => setShowDescription((v) => !v)}
+                className='flex items-center gap-2'>
+                {showDescription ? 'Hide Description' : 'Show Description'}
+              </Button>
+
+              <Popover
+                open={popoverOpen}
+                onOpenChange={setPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant='outline'
+                    className='h-9 px-3 py-1 flex items-center justify-center'>
+                    <CalendarIcon className='h-4 w-4' />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent
+                  className='w-auto p-4'
+                  align='start'>
+                  <div className='flex flex-col gap-4 justify-end'>
+                    <div className='flex gap-2 items-center justify-end'>
+                      <span className='text-sm'>From:</span>
+                      <DatePicker
+                        date={startDate}
+                        onDateChange={setStartDate}
+                      />
+                    </div>
+                    <div className='flex gap-2 items-center justify-end'>
+                      <span className='text-sm'>To:</span>
+                      <DatePicker
+                        date={endDate}
+                        onDateChange={setEndDate}
+                      />
+                    </div>
+                    <div className='flex gap-2'>
+                      <Button
+                        type='button'
+                        variant='default'
+                        className='w-full'
+                        onClick={() => setPopoverOpen(false)}>
+                        Done
+                      </Button>
+                      <Button
+                        type='button'
+                        variant='outline'
+                        className='w-full'
+                        onClick={() => {
+                          setStartDate(undefined);
+                          setEndDate(undefined);
+                        }}>
+                        Clear
+                      </Button>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={handleRefresh}
+                disabled={isRefreshing || loading}
+                className='flex items-center gap-2'>
+                <RefreshCw
+                  className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
+                />
+              </Button>
             </div>
-          </>
-        )}
-      </CardContent>
-    </Card>
+          </div>
+          {loading ? (
+            <div className='text-center py-8'>Loading...</div>
+          ) : expenses.length === 0 ? (
+            <div className='text-center py-8'>No expenses found.</div>
+          ) : (
+            <>
+              {category !== 'All' && (
+                <div className='mb-8'>
+                  <Card className='p-4'>
+                    <CategoryPieChart
+                      expenses={expenses}
+                      category={category}
+                    />
+                  </Card>
+                </div>
+              )}
+              <div className='overflow-x-auto'>
+                <table className='min-w-full text-sm'>
+                  <thead>
+                    <tr className='border'>
+                      <th className='px-3 py-4 text-left whitespace-nowrap'>
+                        Date
+                      </th>
+                      <th className='px-3 py-4 text-left whitespace-nowrap'>
+                        Category
+                      </th>
+                      <th className='px-3 py-4 text-left whitespace-nowrap'>
+                        Subcategory
+                      </th>
+                      <th className='px-3 py-4 text-left whitespace-nowrap'>
+                        Amount
+                      </th>
+                      {showDescription && (
+                        <th className='px-3 py-4 text-left whitespace-nowrap'>
+                          Description
+                        </th>
+                      )}
+                      <th className='px-3 py-4 text-center whitespace-nowrap'>
+                        Delete
+                      </th>
+                      {category === 'All' && (
+                        <th className='px-3 py-4 text-center whitespace-nowrap'>
+                          Edit
+                        </th>
+                      )}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {expenses.map((exp) => (
+                      <tr
+                        key={exp.id}
+                        className='border hover:bg-muted/30'>
+                        <td className='p-3 whitespace-nowrap'>
+                          {exp.date
+                            ? format(
+                                new Date(exp.date + 'T00:00:00'),
+                                'dd/MM/yyyy'
+                              )
+                            : ''}
+                        </td>
+                        <td className='px-3 py-2 whitespace-nowrap'>
+                          {exp.category}
+                        </td>
+                        <td className='px-3 py-2 whitespace-nowrap'>
+                          {exp.subcategory}
+                        </td>
+                        <td className='px-3 py-2 whitespace-nowrap'>
+                          {Number(exp.amount).toFixed(2)}
+                        </td>
+                        {showDescription && (
+                          <td className='px-3 py-2 whitespace-nowrap'>
+                            {exp.description?.trim() ? exp.description : 'NA'}
+                          </td>
+                        )}
+                        <td className='px-3 py-2 text-center whitespace-nowrap'>
+                          <Button
+                            variant='ghost'
+                            size='sm'
+                            onClick={() => handleDelete(exp.id)}
+                            disabled={deletingId === exp.id}
+                            className='h-8 w-8 p-0 hover:bg-destructive hover:text-destructive-foreground'>
+                            <Trash2
+                              className={`h-4 w-4 ${
+                                deletingId === exp.id ? 'animate-pulse' : ''
+                              }`}
+                            />
+                          </Button>
+                        </td>
+                        {category === 'All' && (
+                          <td className='px-3 py-2 text-center whitespace-nowrap'>
+                            <Button
+                              variant='ghost'
+                              size='sm'
+                              onClick={() => handleEdit(exp.id)}
+                              className='h-8 w-8 p-0 hover:bg-primary hover:text-primary-foreground'>
+                              <Pencil className={`h-4 w-4`} />
+                            </Button>
+                          </td>
+                        )}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
+      <EditExpenseModal
+        isOpen={editingExpense !== null}
+        onClose={() => setEditingExpense(null)}
+        expense={editingExpense}
+        onSuccess={handleEditSuccess}
+      />
+    </>
   );
 }
