@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import DayTasksSkeleton from './DayTasksSkeleton';
-import { Trash2, Mic } from 'lucide-react';
+import { Trash2, Camera } from 'lucide-react';
 import toast from 'react-hot-toast';
 import {
   DndContext,
@@ -23,6 +23,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { useDraggable } from '@dnd-kit/core';
 import { Checkbox } from '@/components/ui/checkbox';
 import VoiceInputTodo from './VoiceInputTodo';
+import CameraCapture from './CameraCapture';
 
 interface Todo {
   id: string;
@@ -149,6 +150,7 @@ export default function TodoList({ userId }: TodoListProps) {
   const [loading, setLoading] = useState(false);
   const [initialLoad, setInitialLoad] = useState(true);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [showCamera, setShowCamera] = useState(false);
   const supabase = createClient();
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -257,6 +259,25 @@ export default function TodoList({ userId }: TodoListProps) {
     await fetchTodos();
     setLoading(false);
     toast.success('Task added via voice!');
+  }
+
+  async function addTasksFromCamera(tasks: string[]) {
+    if (!tasks.length) return;
+    setLoading(true);
+    const now = new Date();
+    const localDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+
+    const tasksToAdd = tasks.map((task) => ({
+      user_id: userId,
+      task: task.trim(),
+      status: false,
+      due_date: localDate.toISOString().slice(0, 10),
+    }));
+
+    await supabase.from('todos').insert(tasksToAdd);
+    await fetchTodos();
+    setLoading(false);
+    toast.success(`${tasks.length} tasks added from notebook!`);
   }
 
   async function toggleStatus(todo: Todo) {
@@ -443,7 +464,22 @@ export default function TodoList({ userId }: TodoListProps) {
                 {/* Only render VoiceInputTodo once, outside the date loop */}
                 {date === today && idx === 0 && (
                   <div className='fixed bottom-8 left-1/2 transform -translate-x-1/2 z-40'>
-                    <VoiceInputTodo onResult={addTodoFromVoice} />
+                    <div className='flex items-center gap-3'>
+                      <VoiceInputTodo onResult={addTodoFromVoice} />
+                      <div
+                        onClick={() => setShowCamera(true)}
+                        className='flex flex-col items-center justify-center bg-green-500 rounded-full w-16 h-16 shadow-2xl cursor-pointer'
+                        aria-label='Capture notebook tasks'
+                        style={{
+                          pointerEvents: loading ? 'none' : 'auto',
+                          opacity: loading ? 0.6 : 1,
+                        }}>
+                        <Camera
+                          className='text-white'
+                          size={24}
+                        />
+                      </div>
+                    </div>
                   </div>
                 )}
               </React.Fragment>
@@ -470,6 +506,14 @@ export default function TodoList({ userId }: TodoListProps) {
           </DndContext>
         )}
       </div>
+
+      {/* Camera Capture Modal */}
+      {showCamera && (
+        <CameraCapture
+          onTasksExtracted={addTasksFromCamera}
+          onClose={() => setShowCamera(false)}
+        />
+      )}
     </>
   );
 }

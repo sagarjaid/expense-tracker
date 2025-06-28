@@ -196,13 +196,13 @@ const VoiceInputTodo: React.FC<VoiceInputTodoProps> = ({ onResult }) => {
       {/* Gradient background behind the button */}
       <div
         className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none'
-        style={{
-          width: 220,
-          height: 220,
-          borderRadius: '100%',
-          background: `radial-gradient(circle, ${gradientColor} 0%, ${gradientColor70} 40%, ${gradientColor20} 80%, transparent 100%)`,
-          zIndex: 0,
-        }}
+        // style={{
+        //   width: 220,
+        //   height: 220,
+        //   borderRadius: '100%',
+        //   background: `radial-gradient(circle, ${gradientColor} 0%, ${gradientColor70} 40%, ${gradientColor20} 80%, transparent 100%)`,
+        //   zIndex: 0,
+        // }}
       />
       {error && (
         <div className='text-red-500 font-semibold text-xs mt-1 mb-2'>
