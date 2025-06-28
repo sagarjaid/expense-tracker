@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import DayTasksSkeleton from './DayTasksSkeleton';
-import { Trash2 } from 'lucide-react';
+import { Trash2, Mic } from 'lucide-react';
 import toast from 'react-hot-toast';
 import {
   DndContext,
@@ -22,6 +22,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { useDraggable } from '@dnd-kit/core';
 import { Checkbox } from '@/components/ui/checkbox';
+import VoiceInputTodo from './VoiceInputTodo';
 
 interface Todo {
   id: string;
@@ -53,12 +54,7 @@ function getTodayDate() {
   return localDate.toISOString().slice(0, 10);
 }
 
-const DEFAULT_TASKS = [
-  'Take a shower',
-  'Only 1 Project - AIPM',
-  'Believability weightage',
-  'Avoid Money Loss',
-];
+const DEFAULT_TASKS = ['List down all the tasks'];
 
 function groupByDate(todos: Todo[]) {
   return todos.reduce((acc, todo) => {
@@ -245,6 +241,24 @@ export default function TodoList({ userId }: TodoListProps) {
     setLoading(false);
   }
 
+  async function addTodoFromVoice(taskText: string) {
+    if (!taskText.trim()) return;
+    setLoading(true);
+    const now = new Date();
+    const localDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+    await supabase.from('todos').insert([
+      {
+        user_id: userId,
+        task: taskText,
+        status: false,
+        due_date: localDate.toISOString().slice(0, 10),
+      },
+    ]);
+    await fetchTodos();
+    setLoading(false);
+    toast.success('Task added via voice!');
+  }
+
   async function toggleStatus(todo: Todo) {
     toast.promise(
       (async () => {
@@ -362,48 +376,77 @@ export default function TodoList({ userId }: TodoListProps) {
             sensors={sensors}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}>
-            {Object.entries(grouped).map(([date, tasks]) => (
-              <DateSection
-                key={date}
-                date={date}>
-                <div className='text-xl font-bold mb-2 flex items-center justify-between'>
-                  <span>
-                    {date === today
-                      ? `Today (${formatDate(today)})`
-                      : date === yesterday
-                      ? `Yesterday (${formatDate(yesterday)})`
-                      : formatDate(date)}
-                  </span>
-                  {date === today && (
-                    <Button
-                      variant='outline'
-                      size='sm'
-                      onClick={moveAllPendingToToday}
-                      className='text-xs'>
-                      Move Pending Tasks
-                    </Button>
-                  )}
-                </div>
-                <div className='py-2'>
-                  {tasks
-                    .sort(
-                      (a, b) =>
-                        new Date(a.created_at).getTime() -
-                        new Date(b.created_at).getTime()
-                    )
-                    .map((task) =>
-                      activeId === task.id ? null : (
-                        <DraggableTask
-                          key={task.id}
-                          task={task}
-                          onToggle={toggleStatus}
-                          onDelete={deleteTask}
-                          loading={loading}
-                        />
-                      )
+            {Object.entries(grouped).map(([date, tasks], idx) => (
+              <React.Fragment key={date}>
+                <DateSection date={date}>
+                  <div className='text-xl font-bold mb-2 flex items-center justify-between'>
+                    <span>
+                      {date === today
+                        ? `Today (${formatDate(today)})`
+                        : date === yesterday
+                        ? `Yesterday (${formatDate(yesterday)})`
+                        : formatDate(date)}
+                    </span>
+                    {date === today && (
+                      <Button
+                        variant='outline'
+                        size='sm'
+                        onClick={moveAllPendingToToday}
+                        className='text-xs'>
+                        Move Pending Tasks
+                      </Button>
                     )}
-                </div>
-              </DateSection>
+                  </div>
+                  <div className='py-2'>
+                    {tasks
+                      .sort(
+                        (a, b) =>
+                          new Date(a.created_at).getTime() -
+                          new Date(b.created_at).getTime()
+                      )
+                      .map((task) =>
+                        activeId === task.id ? null : (
+                          <DraggableTask
+                            key={task.id}
+                            task={task}
+                            onToggle={toggleStatus}
+                            onDelete={deleteTask}
+                            loading={loading}
+                          />
+                        )
+                      )}
+                  </div>
+                  {/* Add form right below today's tasks */}
+                  {date === today && (
+                    <div className='w-full pt-2'>
+                      <form
+                        onSubmit={addTodo}
+                        className='flex gap-2 w-full'
+                        style={{ margin: 0 }}>
+                        <Input
+                          ref={inputRef}
+                          value={newTask}
+                          onChange={(e) => setNewTask(e.target.value)}
+                          placeholder='Add a new task...'
+                          disabled={loading}
+                          className='flex-1'
+                        />
+                        <Button
+                          type='submit'
+                          disabled={loading}>
+                          Add
+                        </Button>
+                      </form>
+                    </div>
+                  )}
+                </DateSection>
+                {/* Only render VoiceInputTodo once, outside the date loop */}
+                {date === today && idx === 0 && (
+                  <div className='fixed bottom-8 left-1/2 transform -translate-x-1/2 z-40'>
+                    <VoiceInputTodo onResult={addTodoFromVoice} />
+                  </div>
+                )}
+              </React.Fragment>
             ))}
             <DragOverlay>
               {activeTask ? (
@@ -426,26 +469,6 @@ export default function TodoList({ userId }: TodoListProps) {
             </DragOverlay>
           </DndContext>
         )}
-      </div>
-      <div className='relative max-w-2xl mx-auto'>
-        <form
-          onSubmit={addTodo}
-          className='fixed bottom-0 left-1/2 -translate-x-1/2 flex gap-2 bg-background border-t p-4 pb-8 z-50 w-full max-w-2xl'
-          style={{ margin: 0 }}>
-          <Input
-            ref={inputRef}
-            value={newTask}
-            onChange={(e) => setNewTask(e.target.value)}
-            placeholder='Add a new task...'
-            disabled={loading}
-            className='flex-1'
-          />
-          <Button
-            type='submit'
-            disabled={loading}>
-            Add
-          </Button>
-        </form>
       </div>
     </>
   );
