@@ -7,7 +7,15 @@ import { createClient } from '@/lib/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import DayTasksSkeleton from './DayTasksSkeleton';
-import { Trash2, Camera } from 'lucide-react';
+import {
+  Trash2,
+  Camera,
+  Edit2,
+  RefreshCw,
+  ChevronDown,
+  ChevronRight,
+  ChevronUp,
+} from 'lucide-react';
 import toast from 'react-hot-toast';
 import {
   DndContext,
@@ -18,12 +26,20 @@ import {
   useSensors,
   PointerSensor,
   useDroppable,
+  closestCenter,
 } from '@dnd-kit/core';
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  arrayMove,
+  useSortable,
+} from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useDraggable } from '@dnd-kit/core';
 import { Checkbox } from '@/components/ui/checkbox';
 import VoiceInputTodo from './VoiceInputTodo';
 import CameraCapture from './CameraCapture';
+import Modal from './Modal';
 
 interface Todo {
   id: string;
@@ -33,6 +49,7 @@ interface Todo {
   created_at: string;
   due_date: string | null;
   isDefault?: boolean;
+  sort_order?: number;
 }
 
 interface TodoListProps {
@@ -55,7 +72,7 @@ function getTodayDate() {
   return localDate.toISOString().slice(0, 10);
 }
 
-const DEFAULT_TASKS = ['List down all the tasks'];
+const DEFAULT_TASKS = ['Make a To-Do for the day'];
 
 function groupByDate(todos: Todo[]) {
   return todos.reduce((acc, todo) => {
@@ -66,36 +83,100 @@ function groupByDate(todos: Todo[]) {
   }, {} as Record<string, Todo[]>);
 }
 
-// Draggable Task Component
-function DraggableTask({
+// Sortable Task Component
+function SortableTask({
   task,
   onToggle,
   onDelete,
+  onEdit,
+  onSaveEdit,
+  onCancelEdit,
+  isEditing,
+  editText,
+  onEditTextChange,
   loading,
 }: {
   task: Todo;
   onToggle: (task: Todo) => void;
   onDelete: (id: string) => void;
+  onEdit: (task: Todo) => void;
+  onSaveEdit: () => void;
+  onCancelEdit: () => void;
+  isEditing: boolean;
+  editText: string;
+  onEditTextChange: (text: string) => void;
   loading: boolean;
 }) {
-  const { attributes, listeners, setNodeRef, transform } = useDraggable({
-    id: task.id,
-    data: task,
-  });
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: task.id });
 
-  const style = transform
-    ? {
-        transform: CSS.Translate.toString(transform),
-      }
-    : undefined;
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
+  if (isEditing) {
+    return (
+      <div
+        ref={setNodeRef}
+        style={style}
+        className='flex items-center gap-2 justify-between text-sm py-1 border-b border-gray-200 px-2 bg-blue-50'>
+        <div className='flex items-center gap-2 flex-1'>
+          <Checkbox
+            checked={task.status}
+            onCheckedChange={() => onToggle(task)}
+            disabled={loading}
+          />
+          <Input
+            value={editText}
+            onChange={(e) => onEditTextChange(e.target.value)}
+            placeholder='Enter task text...'
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                onSaveEdit();
+              } else if (e.key === 'Escape') {
+                onCancelEdit();
+              }
+            }}
+            className='flex-1'
+            autoFocus
+          />
+        </div>
+        <div className='flex items-center gap-1'>
+          <Button
+            size='sm'
+            onClick={onSaveEdit}
+            disabled={!editText.trim() || loading}
+            className='h-6 px-2 text-xs'>
+            Save
+          </Button>
+          <Button
+            size='sm'
+            variant='outline'
+            onClick={onCancelEdit}
+            disabled={loading}
+            className='h-6 px-2 text-xs'>
+            Cancel
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <label
+    <div
       ref={setNodeRef}
       style={style}
-      {...listeners}
       {...attributes}
-      className='flex items-center gap-2 justify-between text-sm py-1 border-b border-gray-200 px-2 cursor-move hover:bg-gray-50'>
+      {...listeners}
+      className='flex items-center gap-2 justify-between text-sm py-1 border-b border-gray-200 px-2 cursor-move hover:bg-gray-50 group'>
       <div className='flex items-center gap-2'>
         <Checkbox
           checked={task.status}
@@ -111,15 +192,31 @@ function DraggableTask({
           {task.task}
         </span>
       </div>
-      <button
-        type='button'
-        onClick={() => onDelete(task.id)}
-        className='ml-2 text-gray-500 hover:text-red-700'
-        disabled={loading}
-        aria-label='Delete task'>
-        <Trash2 className='w-3.5 h-3.5' />
-      </button>
-    </label>
+      <div className='flex items-center gap-1'>
+        <button
+          type='button'
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit(task);
+          }}
+          className='text-gray-500 hover:text-blue-700 opacity-0 group-hover:opacity-100 transition-opacity'
+          disabled={loading}
+          aria-label='Edit task'>
+          <Edit2 className='w-3.5 h-3.5' />
+        </button>
+        <button
+          type='button'
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(task.id);
+          }}
+          className='text-gray-500 hover:text-red-700'
+          disabled={loading}
+          aria-label='Delete task'>
+          <Trash2 className='w-3.5 h-3.5' />
+        </button>
+      </div>
+    </div>
   );
 }
 
@@ -151,8 +248,17 @@ export default function TodoList({ userId }: TodoListProps) {
   const [initialLoad, setInitialLoad] = useState(true);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [showCamera, setShowCamera] = useState(false);
+  const [editingTask, setEditingTask] = useState<Todo | null>(null);
+  const [editTaskText, setEditTaskText] = useState('');
+  const [showContextModal, setShowContextModal] = useState(false);
+  const [contextEditText, setContextEditText] = useState('');
+  const [savingContext, setSavingContext] = useState(false);
   const supabase = createClient();
   const inputRef = useRef<HTMLInputElement>(null);
+  const pendingOrderRef = useRef<{ [date: string]: string[] }>({});
+  const [collapsedDays, setCollapsedDays] = useState<Record<string, boolean>>(
+    {}
+  );
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -173,6 +279,17 @@ export default function TodoList({ userId }: TodoListProps) {
     }
   }, [loading]);
 
+  useEffect(() => {
+    if (showContextModal) {
+      if (todayContextTask) {
+        setContextEditText(todayContextTask.task.replace(CONTEXT_PREFIX, ''));
+      } else {
+        setContextEditText(contextText);
+      }
+    }
+    // eslint-disable-next-line
+  }, [showContextModal]);
+
   async function fetchTodos() {
     setLoading(true);
     const today = getTodayDate();
@@ -183,6 +300,7 @@ export default function TodoList({ userId }: TodoListProps) {
       .select('*')
       .eq('user_id', userId)
       .order('due_date', { ascending: false })
+      .order('sort_order', { ascending: true })
       .order('created_at', { ascending: false });
 
     if (!error && data) {
@@ -194,11 +312,17 @@ export default function TodoList({ userId }: TodoListProps) {
 
       // Insert only missing default tasks
       if (missingDefaults.length > 0) {
-        const defaultTasksToAdd = missingDefaults.map((task) => ({
+        const maxSortOrder =
+          todayTasks.length > 0
+            ? Math.max(...todayTasks.map((t) => t.sort_order || 0))
+            : -1;
+
+        const defaultTasksToAdd = missingDefaults.map((task, index) => ({
           user_id: userId,
           task,
           status: false,
           due_date: today,
+          sort_order: maxSortOrder + 1 + index,
         }));
         const { data: insertData, error: insertError } = await supabase
           .from('todos')
@@ -210,6 +334,7 @@ export default function TodoList({ userId }: TodoListProps) {
           .select('*')
           .eq('user_id', userId)
           .order('due_date', { ascending: false })
+          .order('sort_order', { ascending: true })
           .order('created_at', { ascending: false });
         if (!newError && newData) {
           setTodos(newData);
@@ -227,105 +352,257 @@ export default function TodoList({ userId }: TodoListProps) {
   async function addTodo(e: React.FormEvent) {
     e.preventDefault();
     if (!newTask.trim()) return;
-    setLoading(true);
+
     const now = new Date();
     const localDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
-    await supabase.from('todos').insert([
-      {
-        user_id: userId,
-        task: newTask,
-        status: false,
-        due_date: localDate.toISOString().slice(0, 10),
-      },
-    ]);
+    const today = localDate.toISOString().slice(0, 10);
+
+    // Get the highest sort_order for today's tasks
+    const todayTasks = todos.filter((todo) => todo.due_date === today);
+    const maxSortOrder =
+      todayTasks.length > 0
+        ? Math.max(...todayTasks.map((t) => t.sort_order || 0))
+        : -1;
+
+    // Create optimistic task
+    const optimisticTask: Todo = {
+      id: `temp-${Date.now()}`, // Temporary ID
+      task_id: 0,
+      task: newTask,
+      status: false,
+      created_at: new Date().toISOString(),
+      due_date: today,
+      sort_order: maxSortOrder + 1,
+    };
+
+    // Optimistic update: Add to UI immediately
+    setTodos((prev) => [...prev, optimisticTask]);
     setNewTask('');
-    await fetchTodos();
-    setLoading(false);
+
+    // Make API call in background
+    try {
+      const { data, error } = await supabase.from('todos').insert([
+        {
+          user_id: userId,
+          task: newTask,
+          status: false,
+          due_date: today,
+          sort_order: maxSortOrder + 1,
+        },
+      ]);
+
+      if (error) throw error;
+
+      // API call successful - refresh to get the real task with proper ID
+      await fetchTodos();
+      toast.success('Task added!');
+    } catch (error) {
+      // API call failed - revert to original state
+      console.error('Failed to add task:', error);
+      setTodos((prev) => prev.filter((t) => t.id !== optimisticTask.id));
+      setNewTask(newTask); // Restore the input value
+      toast.error('Failed to add task');
+    }
   }
 
   async function addTodoFromVoice(taskText: string) {
     if (!taskText.trim()) return;
-    setLoading(true);
+
     const now = new Date();
     const localDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
-    await supabase.from('todos').insert([
-      {
-        user_id: userId,
-        task: taskText,
-        status: false,
-        due_date: localDate.toISOString().slice(0, 10),
-      },
-    ]);
-    await fetchTodos();
-    setLoading(false);
-    toast.success('Task added via voice!');
+    const today = localDate.toISOString().slice(0, 10);
+
+    // Get the highest sort_order for today's tasks
+    const todayTasks = todos.filter((todo) => todo.due_date === today);
+    const maxSortOrder =
+      todayTasks.length > 0
+        ? Math.max(...todayTasks.map((t) => t.sort_order || 0))
+        : -1;
+
+    // Create optimistic task
+    const optimisticTask: Todo = {
+      id: `temp-${Date.now()}`,
+      task_id: 0,
+      task: taskText,
+      status: false,
+      created_at: new Date().toISOString(),
+      due_date: today,
+      sort_order: maxSortOrder + 1,
+    };
+
+    // Optimistic update: Add to UI immediately
+    setTodos((prev) => [...prev, optimisticTask]);
+
+    // Make API call in background
+    try {
+      const { error } = await supabase.from('todos').insert([
+        {
+          user_id: userId,
+          task: taskText,
+          status: false,
+          due_date: today,
+          sort_order: maxSortOrder + 1,
+        },
+      ]);
+
+      if (error) throw error;
+
+      // API call successful - refresh to get the real task with proper ID
+      await fetchTodos();
+      toast.success('Task added via voice!');
+    } catch (error) {
+      // API call failed - revert to original state
+      console.error('Failed to add voice task:', error);
+      setTodos((prev) => prev.filter((t) => t.id !== optimisticTask.id));
+      toast.error('Failed to add task');
+    }
   }
 
   async function addTasksFromCamera(tasks: string[]) {
     if (!tasks.length) return;
-    setLoading(true);
+
     const now = new Date();
     const localDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
+    const today = localDate.toISOString().slice(0, 10);
 
-    const tasksToAdd = tasks.map((task) => ({
-      user_id: userId,
+    // Get the highest sort_order for today's tasks
+    const todayTasks = todos.filter((todo) => todo.due_date === today);
+    const maxSortOrder =
+      todayTasks.length > 0
+        ? Math.max(...todayTasks.map((t) => t.sort_order || 0))
+        : -1;
+
+    // Create optimistic tasks
+    const optimisticTasks: Todo[] = tasks.map((task, index) => ({
+      id: `temp-${Date.now()}-${index}`,
+      task_id: 0,
       task: task.trim(),
       status: false,
-      due_date: localDate.toISOString().slice(0, 10),
+      created_at: new Date().toISOString(),
+      due_date: today,
+      sort_order: maxSortOrder + 1 + index,
     }));
 
-    await supabase.from('todos').insert(tasksToAdd);
-    await fetchTodos();
-    setLoading(false);
-    toast.success(`${tasks.length} tasks added from notebook!`);
+    // Optimistic update: Add to UI immediately
+    setTodos((prev) => [...prev, ...optimisticTasks]);
+
+    // Make API call in background
+    try {
+      const tasksToAdd = tasks.map((task, index) => ({
+        user_id: userId,
+        task: task.trim(),
+        status: false,
+        due_date: today,
+        sort_order: maxSortOrder + 1 + index,
+      }));
+
+      const { error } = await supabase.from('todos').insert(tasksToAdd);
+
+      if (error) throw error;
+
+      // API call successful - refresh to get the real tasks with proper IDs
+      await fetchTodos();
+      toast.success(`${tasks.length} tasks added from notebook!`);
+    } catch (error) {
+      // API call failed - revert to original state
+      console.error('Failed to add camera tasks:', error);
+      const tempIds = optimisticTasks.map((t) => t.id);
+      setTodos((prev) => prev.filter((t) => !tempIds.includes(t.id)));
+      toast.error('Failed to add tasks');
+    }
   }
 
   async function toggleStatus(todo: Todo) {
-    toast.promise(
-      (async () => {
-        await supabase
-          .from('todos')
-          .update({ status: !todo.status })
-          .eq('id', todo.id);
-        await fetchTodos();
-      })(),
-      {
-        loading: 'Updating...',
-        success: 'Task updated!',
-        error: 'Failed to update task',
-      }
+    // Optimistic update: Update UI immediately
+    const optimisticTodos = todos.map((t) =>
+      t.id === todo.id ? { ...t, status: !t.status } : t
     );
+    setTodos(optimisticTodos);
+
+    // Make API call in background
+    try {
+      const { error } = await supabase
+        .from('todos')
+        .update({ status: !todo.status })
+        .eq('id', todo.id);
+
+      if (error) throw error;
+
+      // API call successful - no need to do anything since UI is already updated
+      toast.success('Task updated!');
+    } catch (error) {
+      // API call failed - revert to original state
+      console.error('Failed to update task:', error);
+      await fetchTodos(); // Refresh from database to get original state
+      toast.error('Failed to update task');
+    }
   }
 
   async function deleteTask(id: string) {
-    toast.promise(
-      (async () => {
-        await supabase.from('todos').delete().eq('id', id);
-        await fetchTodos();
-      })(),
-      {
-        loading: 'Deleting...',
-        success: 'Task deleted!',
-        error: 'Failed to delete task',
+    // Optimistic update: Remove from UI immediately
+    const deletedTask = todos.find((t) => t.id === id);
+    setTodos((prev) => prev.filter((t) => t.id !== id));
+
+    // Make API call in background
+    try {
+      const { error } = await supabase.from('todos').delete().eq('id', id);
+
+      if (error) throw error;
+
+      // API call successful - no need to do anything since UI is already updated
+      toast.success('Task deleted!');
+    } catch (error) {
+      // API call failed - revert to original state
+      console.error('Failed to delete task:', error);
+      if (deletedTask) {
+        setTodos((prev) => [...prev, deletedTask]);
       }
-    );
+      toast.error('Failed to delete task');
+    }
   }
 
   async function updateTaskDate(taskId: string, newDate: string) {
-    toast.promise(
-      (async () => {
-        await supabase
-          .from('todos')
-          .update({ due_date: newDate })
-          .eq('id', taskId);
-        await fetchTodos();
-      })(),
-      {
-        loading: 'Moving task...',
-        success: 'Task moved!',
-        error: 'Failed to move task',
-      }
+    const task = todos.find((t) => t.id === taskId);
+    if (!task) return;
+
+    // Optimistic update: Update UI immediately
+    const optimisticTodos = [...todos];
+    const targetDateTasks = optimisticTodos.filter(
+      (todo) => todo.due_date === newDate
     );
+    const maxSortOrder =
+      targetDateTasks.length > 0
+        ? Math.max(...targetDateTasks.map((t) => t.sort_order || 0))
+        : -1;
+
+    // Update the task in UI immediately
+    const taskToUpdate = optimisticTodos.find((t) => t.id === taskId);
+    if (taskToUpdate) {
+      taskToUpdate.due_date = newDate;
+      taskToUpdate.sort_order = maxSortOrder + 1;
+    }
+
+    // Update the UI immediately
+    setTodos(optimisticTodos);
+
+    // Make API call in background
+    try {
+      await supabase
+        .from('todos')
+        .update({
+          due_date: newDate,
+          sort_order: maxSortOrder + 1,
+        })
+        .eq('id', taskId);
+
+      // API call successful - no need to do anything since UI is already updated
+      toast.success('Task moved!');
+    } catch (error) {
+      // API call failed - revert to original state
+      console.error('Failed to move task:', error);
+      await fetchTodos(); // Refresh from database to get original state
+      toast.error('Failed to move task');
+    }
   }
 
   async function moveAllPendingToToday() {
@@ -359,6 +636,34 @@ export default function TodoList({ userId }: TodoListProps) {
     );
   }
 
+  async function updateTaskOrder(taskIds: string[], date: string) {
+    // Save the intended order in the ref (redundant but safe)
+    pendingOrderRef.current[date] = taskIds;
+
+    // Find the full task objects for this date in the correct order
+    const dateTasks = taskIds.map((id) => todos.find((t) => t.id === id)!);
+    // Build the updates array with all NOT NULL fields
+    const updates = dateTasks.map((t, i) => ({ ...t, sort_order: i }));
+
+    // Optimistic update: UI is already updated in handleDragEnd
+    try {
+      await supabase.from('todos').upsert(updates, { onConflict: 'id' });
+      toast.success('Tasks reordered!');
+      // Do NOT call fetchTodos() here!
+    } catch (error) {
+      // Only revert if the intended order is still current
+      if (
+        pendingOrderRef.current[date] &&
+        JSON.stringify(pendingOrderRef.current[date]) ===
+          JSON.stringify(taskIds)
+      ) {
+        console.error('Failed to update task order:', error);
+        await fetchTodos();
+        toast.error('Failed to reorder tasks');
+      }
+    }
+  }
+
   function handleDragStart(event: DragStartEvent) {
     setActiveId(event.active.id as string);
   }
@@ -367,17 +672,160 @@ export default function TodoList({ userId }: TodoListProps) {
     const { active, over } = event;
     setActiveId(null);
 
-    if (over && active.id !== over.id) {
-      const task = todos.find((t) => t.id === active.id);
-      const targetDate = over.id as string;
+    if (!over) return;
 
-      if (task) {
-        updateTaskDate(task.id, targetDate);
+    const activeTask = todos.find((t) => t.id === active.id);
+    if (!activeTask) return;
+
+    // Check if dropping on a date section (moving between dates)
+    if (Object.keys(groupByDate(todos)).includes(over.id as string)) {
+      const targetDate = over.id as string;
+      if (activeTask.due_date !== targetDate) {
+        updateTaskDate(activeTask.id, targetDate);
+      }
+      return;
+    }
+
+    // Check if dropping on another task (reordering within same date)
+    const overTask = todos.find((t) => t.id === over.id);
+    if (overTask && activeTask.due_date === overTask.due_date) {
+      const date = activeTask.due_date;
+      const dateTasks = todos.filter((t) => t.due_date === date);
+      const oldIndex = dateTasks.findIndex((t) => t.id === active.id);
+      const newIndex = dateTasks.findIndex((t) => t.id === over.id);
+
+      if (oldIndex !== newIndex) {
+        // Reorder only the dateTasks array
+        const reorderedDateTasks = arrayMove(dateTasks, oldIndex, newIndex);
+        // Update sort_order for each task in the new order
+        reorderedDateTasks.forEach((task, idx) => {
+          task.sort_order = idx;
+        });
+        // Merge back into the full todos list, preserving order for other dates
+        const newTodos = todos.map((t) => {
+          const idx = reorderedDateTasks.findIndex((dt) => dt.id === t.id);
+          return idx !== -1 ? reorderedDateTasks[idx] : t;
+        });
+        setTodos(newTodos);
+        // Save the intended order in the ref
+        pendingOrderRef.current[date!] = reorderedDateTasks.map((t) => t.id);
+        // Update DB order for only this date's tasks
+        updateTaskOrder(
+          reorderedDateTasks.map((t) => t.id),
+          date!
+        );
       }
     }
   }
 
-  const grouped = groupByDate(todos);
+  async function updateTask(taskId: string, newTaskText: string) {
+    // Optimistic update: Update UI immediately
+    const optimisticTodos = todos.map((t) =>
+      t.id === taskId ? { ...t, task: newTaskText } : t
+    );
+    setTodos(optimisticTodos);
+    setEditingTask(null);
+    setEditTaskText('');
+
+    // Make API call in background
+    try {
+      const { error } = await supabase
+        .from('todos')
+        .update({ task: newTaskText })
+        .eq('id', taskId);
+
+      if (error) throw error;
+
+      // API call successful - no need to do anything since UI is already updated
+      toast.success('Task updated!');
+    } catch (error) {
+      // API call failed - revert to original state
+      console.error('Failed to update task:', error);
+      await fetchTodos(); // Refresh from database to get original state
+      setEditingTask(null);
+      setEditTaskText('');
+      toast.error('Failed to update task');
+    }
+  }
+
+  function handleEditTask(task: Todo) {
+    setEditingTask(task);
+    setEditTaskText(task.task);
+  }
+
+  function handleCancelEdit() {
+    setEditingTask(null);
+    setEditTaskText('');
+  }
+
+  function handleSaveEdit() {
+    if (editingTask && editTaskText.trim()) {
+      updateTask(editingTask.id, editTaskText.trim());
+    }
+  }
+
+  async function moveAllDoneToToday() {
+    const today = getTodayDate();
+    const todayTasks = todos.filter((todo) => todo.due_date === today);
+    const incomplete = todayTasks.filter((t) => !t.status);
+    const complete = todayTasks.filter((t) => t.status);
+    const newOrder = [...incomplete, ...complete];
+    const taskIds = newOrder.map((t) => t.id);
+
+    // Optimistic update
+    const optimisticTodos = [...todos];
+    let sortIndex = 0;
+    for (const id of taskIds) {
+      const task = optimisticTodos.find((t) => t.id === id);
+      if (task) task.sort_order = sortIndex++;
+    }
+    setTodos(optimisticTodos);
+
+    // Update DB
+    try {
+      for (let i = 0; i < taskIds.length; i++) {
+        await supabase
+          .from('todos')
+          .update({ sort_order: i })
+          .eq('id', taskIds[i])
+          .eq('user_id', userId);
+      }
+      toast.success('Done tasks moved down!');
+    } catch (error) {
+      await fetchTodos();
+      toast.error('Failed to move done tasks');
+    }
+  }
+
+  function toggleDayCollapse(date: string) {
+    setCollapsedDays((prev) => ({ ...prev, [date]: !prev[date] }));
+  }
+
+  // Helper to check if all previous days are collapsed
+  const allPreviousCollapsed = Object.entries(groupByDate(todos))
+    .filter(([date]) => date !== getTodayDate())
+    .every(([date]) => collapsedDays[date]);
+
+  function toggleAllPreviousDays() {
+    const newState: Record<string, boolean> = {};
+    Object.keys(groupByDate(todos)).forEach((date) => {
+      if (date !== getTodayDate()) newState[date] = !allPreviousCollapsed;
+    });
+    setCollapsedDays((prev) => ({ ...prev, ...newState }));
+  }
+
+  // Helper to find today's context task (by prefix)
+  const CONTEXT_PREFIX = '[CONTEXT] ';
+  const todayContextTask = todos.find(
+    (t) => t.due_date === getTodayDate() && t.task.startsWith(CONTEXT_PREFIX)
+  );
+
+  // Filter out context tasks from main list
+  const todosWithoutContext = todos.filter(
+    (t) => !t.task.startsWith(CONTEXT_PREFIX)
+  );
+  const grouped = groupByDate(todosWithoutContext);
+
   const now = new Date();
   const localDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
   const today = localDate.toISOString().slice(0, 10);
@@ -387,6 +835,46 @@ export default function TodoList({ userId }: TodoListProps) {
 
   const activeTask = activeId ? todos.find((t) => t.id === activeId) : null;
 
+  const contextText = `Sagar 2025\n\nEnglish Spelling & Speaking: Toastmasters\nDecision Making: Money loss, believability weightage\nVipassana Practice\n\nUpper body workouts\nRunning\n\nJob: ₹33 LPA (salary) - ₹2L in PM/Dev role\nOnly 1 Project Per Year: Sales goal $20 * 10K paid users (AI Scrum Master)\n50% Saving from Salary\n\nClothing according to place\nBuy New Scooty: EMI (3 EMI plans)\n2 BHK Apartment: Rent in Bangalore\n\nMedia Input: 1 hour per day, includes all available books but limits to 2 new books.\n\nDate to Marry\nLakadi\nPeace\nMatch\n20 LPA - IT/ FANG / Big 4/ Doctor/ Software Engg`;
+
+  async function saveContextTask() {
+    if (!contextEditText.trim()) return;
+    setSavingContext(true);
+    const taskText = CONTEXT_PREFIX + contextEditText.trim();
+    const todayTasks = todos.filter((todo) => todo.due_date === today);
+    const maxSortOrder =
+      todayTasks.length > 0
+        ? Math.max(...todayTasks.map((t) => t.sort_order || 0))
+        : -1;
+    try {
+      if (todayContextTask) {
+        // Update existing
+        await supabase
+          .from('todos')
+          .update({ task: taskText })
+          .eq('id', todayContextTask.id);
+      } else {
+        // Insert new
+        await supabase.from('todos').insert([
+          {
+            user_id: userId,
+            task: taskText,
+            status: false,
+            due_date: today,
+            sort_order: maxSortOrder + 1,
+          },
+        ]);
+      }
+      await fetchTodos();
+      toast.success('Context saved!');
+      setShowContextModal(false);
+    } catch (error) {
+      toast.error('Failed to save context');
+    } finally {
+      setSavingContext(false);
+    }
+  }
+
   return (
     <>
       <div className='space-y-8 pb-20 max-w-2xl'>
@@ -395,68 +883,164 @@ export default function TodoList({ userId }: TodoListProps) {
         ) : (
           <DndContext
             sensors={sensors}
+            collisionDetection={closestCenter}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}>
             {Object.entries(grouped).map(([date, tasks], idx) => (
               <React.Fragment key={date}>
                 <DateSection date={date}>
-                  <div className='text-xl font-bold mb-2 flex items-center justify-between'>
-                    <span>
-                      {date === today
-                        ? `Today (${formatDate(today)})`
-                        : date === yesterday
-                        ? `Yesterday (${formatDate(yesterday)})`
-                        : formatDate(date)}
+                  <div className='text-xl font-bold flex flex-wrap flex-col gap-2 md:flex-row justify-between'>
+                    <span className='flex items-center gap-2 flex-wrap justify-between w-full'>
+                      <div className='flex items-center gap-2'>
+                        {date !== today && (
+                          <button
+                            type='button'
+                            onClick={() => toggleDayCollapse(date)}
+                            className='focus:outline-none'>
+                            {collapsedDays[date] ? (
+                              <ChevronRight className='w-5 h-5' />
+                            ) : (
+                              <ChevronDown className='w-5 h-5' />
+                            )}
+                          </button>
+                        )}
+
+                        {date === today
+                          ? `Today (${formatDate(today)})`
+                          : date === yesterday
+                          ? `Yesterday (${formatDate(yesterday)})`
+                          : formatDate(date)}
+                      </div>
+
+                      <div className='flex items-center gap-2'>
+                        {date === yesterday && (
+                          <div
+                            className='cursor-pointer'
+                            onClick={toggleAllPreviousDays}>
+                            {allPreviousCollapsed ? (
+                              <ChevronUp className='w-5 h-5 mr-1' />
+                            ) : (
+                              <ChevronDown className='w-5 h-5 mr-1' />
+                            )}
+                          </div>
+                        )}
+                        {date === today && (
+                          <>
+                            <Button
+                              variant='outline'
+                              size='sm'
+                              onClick={fetchTodos}
+                              disabled={loading}
+                              className='text-xs'>
+                              <RefreshCw
+                                className={`w-3 h-3 mr-1 ${
+                                  loading ? 'animate-spin' : ''
+                                }`}
+                              />
+                            </Button>
+                            <Button
+                              variant='outline'
+                              size='sm'
+                              onClick={() => moveAllDoneToToday()}
+                              className='text-xs'>
+                              Done at End
+                            </Button>
+                            <Button
+                              variant='outline'
+                              size='sm'
+                              onClick={moveAllPendingToToday}
+                              className='text-xs'>
+                              Move Pending Tasks
+                            </Button>
+                            <Button
+                              variant='outline'
+                              size='sm'
+                              onClick={() => setShowContextModal(true)}
+                              className='text-xs'>
+                              Goals
+                            </Button>
+                          </>
+                        )}
+                      </div>
                     </span>
-                    {date === today && (
-                      <Button
-                        variant='outline'
-                        size='sm'
-                        onClick={moveAllPendingToToday}
-                        className='text-xs'>
-                        Move Pending Tasks
-                      </Button>
-                    )}
                   </div>
-                  <div className='py-2'>
-                    {tasks
-                      .sort(
-                        (a, b) =>
-                          new Date(a.created_at).getTime() -
-                          new Date(b.created_at).getTime()
-                      )
-                      .map((task) =>
-                        activeId === task.id ? null : (
-                          <DraggableTask
-                            key={task.id}
-                            task={task}
-                            onToggle={toggleStatus}
-                            onDelete={deleteTask}
-                            loading={loading}
-                          />
-                        )
-                      )}
-                  </div>
+                  {(collapsedDays[date] || date === today) && (
+                    <SortableContext
+                      items={tasks.map((t) => t.id)}
+                      strategy={verticalListSortingStrategy}>
+                      <div className='pt-4'>
+                        {tasks
+                          .sort(
+                            (a, b) => (a.sort_order || 0) - (b.sort_order || 0)
+                          )
+                          .map((task) =>
+                            activeId === task.id ? null : (
+                              <SortableTask
+                                key={task.id}
+                                task={task}
+                                onToggle={toggleStatus}
+                                onDelete={deleteTask}
+                                onEdit={handleEditTask}
+                                onSaveEdit={handleSaveEdit}
+                                onCancelEdit={handleCancelEdit}
+                                isEditing={editingTask === task}
+                                editText={editTaskText}
+                                onEditTextChange={(text) =>
+                                  setEditTaskText(text)
+                                }
+                                loading={loading}
+                              />
+                            )
+                          )}
+                      </div>
+                    </SortableContext>
+                  )}
                   {/* Add form right below today's tasks */}
-                  {date === today && (
-                    <div className='w-full pt-2'>
+                  {date === today && idx === 0 && (
+                    <div className='w-full'>
                       <form
                         onSubmit={addTodo}
-                        className='flex gap-2 w-full'
+                        className='flex items-center gap-2 justify-between text-sm py-1.5 border-b border-gray-200 px-2 bg-gray-50 rounded-md'
                         style={{ margin: 0 }}>
-                        <Input
-                          ref={inputRef}
-                          value={newTask}
-                          onChange={(e) => setNewTask(e.target.value)}
-                          placeholder='Add a new task...'
-                          disabled={loading}
-                          className='flex-1'
-                        />
-                        <Button
-                          type='submit'
-                          disabled={loading}>
-                          Add
-                        </Button>
+                        <div className='flex items-center gap-2 flex-1'>
+                          <Checkbox
+                            checked={false}
+                            disabled
+                            className='opacity-0'
+                          />
+                          <Input
+                            ref={inputRef}
+                            value={newTask}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              setNewTask(
+                                value.charAt(0).toUpperCase() + value.slice(1)
+                              );
+                            }}
+                            placeholder='Add a new task...'
+                            disabled={loading}
+                            className='flex-1  h-7 bg-white text-sm placeholder:text-sm'
+                            autoFocus
+                          />
+                        </div>
+                        <div className='flex items-center gap-1'>
+                          <Button
+                            type='submit'
+                            size='sm'
+                            disabled={loading || !newTask.trim()}
+                            className='h-6 px-2 text-xs'>
+                            Add
+                          </Button>
+                          <Button
+                            type='button'
+                            size='sm'
+                            variant='outline'
+                            onClick={() => setNewTask('')}
+                            disabled={loading || !newTask}
+                            className='h-6 px-2 text-xs'>
+                            Clear
+                          </Button>
+                        </div>
                       </form>
                     </div>
                   )}
@@ -514,6 +1098,40 @@ export default function TodoList({ userId }: TodoListProps) {
           onClose={() => setShowCamera(false)}
         />
       )}
+      {/* Context Modal */}
+      <Modal
+        isModalOpen={showContextModal}
+        setIsModalOpen={setShowContextModal}
+        title='Context'>
+        <textarea
+          className='whitespace-pre-line text-base p-2 rounded bg-gray-50 border border-gray-200 w-full min-h-[220px] h-[420px]'
+          value={contextEditText}
+          onChange={(e) => setContextEditText(e.target.value)}
+          disabled={savingContext}
+        />
+        <div className='flex gap-2 mt-4 justify-end'>
+          <Button
+            variant='outline'
+            size='sm'
+            onClick={() => setShowContextModal(false)}
+            disabled={savingContext}>
+            Cancel
+          </Button>
+          <Button
+            size='sm'
+            onClick={saveContextTask}
+            disabled={
+              savingContext ||
+              !contextEditText.trim() ||
+              contextEditText.trim() ===
+                (todayContextTask
+                  ? todayContextTask.task.replace(CONTEXT_PREFIX, '')
+                  : contextText)
+            }>
+            {savingContext ? 'Saving...' : 'Save'}
+          </Button>
+        </div>
+      </Modal>
     </>
   );
 }

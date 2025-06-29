@@ -51,6 +51,7 @@
     "react-hot-toast": "^2.5.2",
     "react-syntax-highlighter": "^15.5.0",
     "react-tooltip": "^5.26.3",
+    "react-webcam": "^7.2.0",
     "recharts": "^2.15.3",
     "resend": "^4.0.1",
     "stripe": "^13.11.0",
