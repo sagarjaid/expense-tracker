@@ -64,7 +64,6 @@ const PROJECT_TAGS = [
   { label: 'Sagar', color: 'bg-blue-100 text-blue-700' },
   { label: 'Office', color: 'bg-green-100 text-green-700' },
   { label: 'AIPM', color: 'bg-gray-100 text-black' },
-  { label: 'CareerAI', color: 'bg-yellow-100 text-yellow-700' },
   { label: 'NeverMissAI', color: 'bg-gray-100 text-gray-700' },
   { label: 'VisaInterviewAI', color: 'bg-gray-100 text-gray-700' },
 ];
@@ -338,6 +337,14 @@ export default function TodoList({ userId }: TodoListProps) {
     // eslint-disable-next-line
   }, [showContextModal]);
 
+  useEffect(() => {
+    if (activeProjectTag !== 'All') {
+      setNewProjectTag(activeProjectTag);
+    } else {
+      setNewProjectTag('');
+    }
+  }, [activeProjectTag]);
+
   async function fetchTodos() {
     setLoading(true);
     const today = getTodayDate();
@@ -427,7 +434,7 @@ export default function TodoList({ userId }: TodoListProps) {
     // Optimistic update: Add to UI immediately
     setTodos((prev) => [...prev, optimisticTask]);
     setNewTask('');
-    setNewProjectTag('');
+    if (activeProjectTag === 'All') setNewProjectTag('');
 
     // Make API call in background
     try {
@@ -452,7 +459,7 @@ export default function TodoList({ userId }: TodoListProps) {
       console.error('Failed to add task:', error);
       setTodos((prev) => prev.filter((t) => t.id !== optimisticTask.id));
       setNewTask(newTask);
-      setNewProjectTag(newProjectTag);
+      if (activeProjectTag === 'All') setNewProjectTag('');
       toast.error('Failed to add task');
     }
   }
@@ -1179,7 +1186,8 @@ export default function TodoList({ userId }: TodoListProps) {
                             variant='outline'
                             onClick={() => {
                               setNewTask('');
-                              setNewProjectTag('');
+                              if (activeProjectTag === 'All')
+                                setNewProjectTag('');
                             }}
                             disabled={loading || !newTask}
                             className='h-6 px-2 text-xs'>
