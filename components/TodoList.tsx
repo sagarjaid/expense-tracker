@@ -43,6 +43,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import VoiceInputTodo from './VoiceInputTodo';
 import CameraCapture from './CameraCapture';
 import Modal from './Modal';
+import dayjs from 'dayjs';
 
 interface Todo {
   id: string;
@@ -64,9 +65,9 @@ const PROJECT_TAGS = [
   { label: 'Sagar', color: 'bg-blue-100 text-blue-700' },
   { label: 'Office', color: 'bg-green-100 text-green-700' },
   { label: 'AIPM', color: 'bg-gray-100 text-black' },
-  { label: 'CareerdekhoAI', color: 'bg-yellow-100 text-yellow-700' },
+  { label: 'CareerAI', color: 'bg-yellow-100 text-yellow-700' },
   { label: 'NeverMissAI', color: 'bg-gray-100 text-gray-700' },
-  { label: 'VisaInteviewAI', color: 'bg-gray-100 text-gray-700' },
+  { label: 'VisaInterviewAI', color: 'bg-gray-100 text-gray-700' },
 ];
 
 function formatDate(dateStr: string) {
@@ -300,6 +301,13 @@ export default function TodoList({ userId }: TodoListProps) {
   const [newProjectTag, setNewProjectTag] = useState('');
   const [editProjectTag, setEditProjectTag] = useState('');
   const [activeProjectTag, setActiveProjectTag] = useState<string>('All');
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const now = new Date();
+    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(
+      2,
+      '0'
+    )}`;
+  });
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -888,7 +896,23 @@ export default function TodoList({ userId }: TodoListProps) {
     activeProjectTag === 'All'
       ? todosWithoutContext
       : todosWithoutContext.filter((t) => t.project_tag === activeProjectTag);
-  const grouped = groupByDate(filteredTodos);
+
+  // Generate last 12 months for dropdown
+  const monthOptions = Array.from({ length: 12 }, (_, i) => {
+    const d = new Date();
+    d.setMonth(d.getMonth() - i);
+    return {
+      value: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`,
+      label: d.toLocaleString('default', { month: 'long' }),
+    };
+  });
+
+  // Filter todos by selected month
+  const todosInMonth = filteredTodos.filter((t) => {
+    const date = t.due_date || t.created_at;
+    return date.startsWith(selectedMonth);
+  });
+  const grouped = groupByDate(todosInMonth);
 
   const now = new Date();
   const localDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
@@ -964,6 +988,18 @@ export default function TodoList({ userId }: TodoListProps) {
             {tag.label}
           </button>
         ))}
+        <select
+          value={selectedMonth}
+          onChange={(e) => setSelectedMonth(e.target.value)}
+          className='`px-3 py-1 rounded-md border border-gray-300 text-xs font-semibold whitespace-nowrap min-w-fit'>
+          {monthOptions.map((opt) => (
+            <option
+              key={opt.value}
+              value={opt.value}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
       </div>
       <div className='space-y-8 pb-32 max-w-2xl w-full mx-auto px-2 sm:px-0'>
         {initialLoad && loading ? (
