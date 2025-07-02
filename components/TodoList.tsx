@@ -43,7 +43,6 @@ import { Checkbox } from '@/components/ui/checkbox';
 import VoiceInputTodo from './VoiceInputTodo';
 import CameraCapture from './CameraCapture';
 import Modal from './Modal';
-import dayjs from 'dayjs';
 
 interface Todo {
   id: string;
@@ -145,7 +144,7 @@ function SortableTask({
       <div
         ref={setNodeRef}
         style={style}
-        className='flex items-center gap-2 justify-between text-sm py-1 border-b border-gray-200 px-2 bg-blue-50'>
+        className='flex items-center gap-2 justify-between text-sm py-1 border-b border-gray-200 px-2 bg-blue-50 dark:bg-gray-800 dark:border-gray-700'>
         <div className='flex items-center gap-2 flex-1'>
           <Checkbox
             checked={task.status}
@@ -163,13 +162,13 @@ function SortableTask({
                 onCancelEdit();
               }
             }}
-            className='flex-1'
+            className='flex-1 h-7 bg-white text-sm placeholder:text-sm min-w-0 dark:bg-gray-900 dark:text-gray-200 dark:placeholder:text-gray-400'
             autoFocus
           />
           <select
             value={editProjectTag}
             onChange={(e) => onEditProjectTagChange(e.target.value)}
-            className='w-32 ml-2 text-xs border border-gray-300 rounded px-1 py-1 bg-white'
+            className='w-32 ml-2 text-xs border border-gray-300 rounded px-1 py-1 bg-white dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700'
             disabled={loading}>
             <option value=''>Project tag</option>
             {PROJECT_TAGS.map((tag) => (
@@ -208,7 +207,7 @@ function SortableTask({
       style={style}
       {...attributes}
       {...listeners}
-      className='flex items-center gap-2 justify-between text-sm py-1 border-b border-gray-200 px-2 cursor-move hover:bg-gray-50 group'>
+      className='flex items-center gap-2 justify-between text-sm py-1 border-b border-gray-200 px-2 cursor-move hover:bg-gray-50 group dark:border-gray-700 dark:hover:bg-gray-800'>
       <div className='flex items-center gap-2'>
         <Checkbox
           checked={task.status}
@@ -238,7 +237,7 @@ function SortableTask({
         </button>
 
         {task.project_tag && (
-          <span className='ml-2 font-semibold text-[10px] px-2 py-0.25 rounded-md border border-gray-200 text-gray-700 bg-white'>
+          <span className='ml-2 font-semibold text-[10px] px-2 py-0.25 rounded-md border border-gray-200 text-gray-700 bg-white dark:border-gray-700 dark:text-gray-200 dark:bg-gray-900'>
             {task.project_tag}
           </span>
         )}
@@ -273,7 +272,7 @@ function DateSection({
   return (
     <div
       ref={setNodeRef}
-      className={`mb-6 ${isOver ? 'bg-gray-100' : ''}`}
+      className={`mb-6 ${isOver ? 'bg-gray-100 dark:bg-gray-800' : ''}`}
       data-date={date}>
       {children}
     </div>
@@ -966,12 +965,12 @@ export default function TodoList({ userId }: TodoListProps) {
   return (
     <>
       {/* Project Tag Tabs */}
-      <div className='flex gap-2 mb-4 overflow-x-auto no-scrollbar w-full max-w-full pb-1 -mx-2 px-2'>
+      <div className='flex gap-1 mb-4 overflow-x-auto no-scrollbar w-full max-w-full pb-1 -mx-2 px-2'>
         <button
           className={`px-3 py-1 rounded-md border text-xs font-semibold transition-colors whitespace-nowrap min-w-fit ${
             activeProjectTag === 'All'
-              ? 'bg-gray-800 text-white border-gray-800'
-              : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
+              ? 'bg-gray-800 text-white border-gray-800 dark:bg-gray-200 dark:text-gray-900 dark:border-gray-200'
+              : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-800'
           }`}
           onClick={() => setActiveProjectTag('All')}>
           All
@@ -981,8 +980,8 @@ export default function TodoList({ userId }: TodoListProps) {
             key={tag.label}
             className={`px-3 py-1 rounded-md border text-xs font-semibold transition-colors whitespace-nowrap min-w-fit ${
               activeProjectTag === tag.label
-                ? 'bg-gray-800 text-white border-gray-800'
-                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
+                ? 'bg-gray-800 text-white border-gray-800 dark:bg-gray-200 dark:text-gray-900 dark:border-gray-200'
+                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700 dark:hover:bg-gray-800'
             }`}
             onClick={() => setActiveProjectTag(tag.label)}>
             {tag.label}
@@ -991,11 +990,12 @@ export default function TodoList({ userId }: TodoListProps) {
         <select
           value={selectedMonth}
           onChange={(e) => setSelectedMonth(e.target.value)}
-          className='`px-3 py-1 rounded-md border border-gray-300 text-xs font-semibold whitespace-nowrap min-w-fit'>
+          className='px-1 rounded-md border border-gray-300 text-xs font-semibold whitespace-nowrap min-w-fit bg-white text-gray-700 dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700'>
           {monthOptions.map((opt) => (
             <option
               key={opt.value}
-              value={opt.value}>
+              value={opt.value}
+              className='dark:bg-gray-900 dark:text-gray-200'>
               {opt.label}
             </option>
           ))}
@@ -1128,7 +1128,7 @@ export default function TodoList({ userId }: TodoListProps) {
                     <div className='w-full'>
                       <form
                         onSubmit={addTodo}
-                        className='flex items-center gap-2 justify-between text-sm py-1.5 border-b border-gray-200 px-2 bg-gray-50 rounded-md flex-wrap sm:flex-nowrap'
+                        className='flex items-center gap-2 justify-between text-sm py-1.5 border-b border-gray-200 px-2 bg-gray-50 rounded-md flex-wrap sm:flex-nowrap dark:border-gray-700 dark:bg-gray-900'
                         style={{ margin: 0 }}>
                         <div className='flex items-center gap-2 flex-1 min-w-0'>
                           <Checkbox
@@ -1147,13 +1147,13 @@ export default function TodoList({ userId }: TodoListProps) {
                             }}
                             placeholder='Add a new task...'
                             disabled={loading}
-                            className='flex-1 h-7 bg-white text-sm placeholder:text-sm min-w-0'
+                            className='flex-1 h-7 bg-white text-sm placeholder:text-sm min-w-0 dark:bg-gray-900 dark:text-gray-200 dark:placeholder:text-gray-400'
                             autoFocus
                           />
                           <select
                             value={newProjectTag}
                             onChange={(e) => setNewProjectTag(e.target.value)}
-                            className='w-28 sm:w-32 ml-2 text-xs border border-gray-300 rounded px-1 py-1 bg-white'
+                            className='w-28 sm:w-32 ml-2 text-xs border border-gray-300 rounded px-1 py-1 bg-white dark:bg-gray-900 dark:text-gray-200 dark:border-gray-700'
                             disabled={loading}>
                             <option value=''>Project tag</option>
                             {PROJECT_TAGS.map((tag) => (
@@ -1215,7 +1215,7 @@ export default function TodoList({ userId }: TodoListProps) {
             ))}
             <DragOverlay>
               {activeTask ? (
-                <div className='bg-white shadow-lg rounded-md py-1 px-2 border flex items-center gap-2 text-sm'>
+                <div className='bg-white shadow-lg rounded-md py-1 px-2 border flex items-center gap-2 text-sm dark:bg-gray-900 dark:border-gray-700 dark:text-gray-200'>
                   <input
                     type='checkbox'
                     checked={activeTask.status}
@@ -1249,7 +1249,7 @@ export default function TodoList({ userId }: TodoListProps) {
         title='Context'
         modalClassName='w-full max-w-full sm:max-w-lg rounded-none sm:rounded-lg p-0 sm:p-6'>
         <textarea
-          className='whitespace-pre-line text-base p-2 rounded bg-gray-50 border border-gray-200 w-full min-h-[220px] h-[420px]'
+          className='whitespace-pre-line text-base p-2 rounded bg-gray-50 border border-gray-200 w-full min-h-[220px] h-[420px] dark:bg-gray-900 dark:border-gray-700 dark:text-gray-200'
           value={contextEditText}
           onChange={(e) => setContextEditText(e.target.value)}
           disabled={savingContext}
