@@ -15,6 +15,9 @@ import {
   ChevronDown,
   ChevronRight,
   ChevronUp,
+  CornerDownRight,
+  CornerRightUp,
+  Target,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import {
@@ -50,11 +53,21 @@ interface Todo {
   due_date: string | null;
   isDefault?: boolean;
   sort_order?: number;
+  project_tag?: string;
 }
 
 interface TodoListProps {
   userId: string;
 }
+
+const PROJECT_TAGS = [
+  { label: 'Sagar', color: 'bg-blue-100 text-blue-700' },
+  { label: 'Office', color: 'bg-green-100 text-green-700' },
+  { label: 'AIPM', color: 'bg-gray-100 text-black' },
+  { label: 'CareerdekhoAI', color: 'bg-yellow-100 text-yellow-700' },
+  { label: 'NeverMissAI', color: 'bg-gray-100 text-gray-700' },
+  { label: 'VisaInteviewAI', color: 'bg-gray-100 text-gray-700' },
+];
 
 function formatDate(dateStr: string) {
   const date = new Date(dateStr);
@@ -95,6 +108,8 @@ function SortableTask({
   editText,
   onEditTextChange,
   loading,
+  editProjectTag,
+  onEditProjectTagChange,
 }: {
   task: Todo;
   onToggle: (task: Todo) => void;
@@ -106,6 +121,8 @@ function SortableTask({
   editText: string;
   onEditTextChange: (text: string) => void;
   loading: boolean;
+  editProjectTag: string;
+  onEditProjectTagChange: (tag: string) => void;
 }) {
   const {
     attributes,
@@ -148,6 +165,20 @@ function SortableTask({
             className='flex-1'
             autoFocus
           />
+          <select
+            value={editProjectTag}
+            onChange={(e) => onEditProjectTagChange(e.target.value)}
+            className='w-32 ml-2 text-xs border border-gray-300 rounded px-1 py-1 bg-white'
+            disabled={loading}>
+            <option value=''>Project tag</option>
+            {PROJECT_TAGS.map((tag) => (
+              <option
+                key={tag.label}
+                value={tag.label}>
+                {tag.label}
+              </option>
+            ))}
+          </select>
         </div>
         <div className='flex items-center gap-1'>
           <Button
@@ -199,11 +230,18 @@ function SortableTask({
             e.stopPropagation();
             onEdit(task);
           }}
-          className='text-gray-500 hover:text-blue-700 opacity-0 group-hover:opacity-100 transition-opacity'
+          className='text-gray-500 hover:text-blue-700 opacity-0  group-hover:opacity-100 transition-opacity'
           disabled={loading}
           aria-label='Edit task'>
           <Edit2 className='w-3.5 h-3.5' />
         </button>
+
+        {task.project_tag && (
+          <span className='ml-2 font-semibold text-[10px] px-2 py-0.25 rounded-md border border-gray-200 text-gray-700 bg-white'>
+            {task.project_tag}
+          </span>
+        )}
+
         <button
           type='button'
           onClick={(e) => {
@@ -259,6 +297,9 @@ export default function TodoList({ userId }: TodoListProps) {
   const [collapsedDays, setCollapsedDays] = useState<Record<string, boolean>>(
     {}
   );
+  const [newProjectTag, setNewProjectTag] = useState('');
+  const [editProjectTag, setEditProjectTag] = useState('');
+  const [activeProjectTag, setActiveProjectTag] = useState<string>('All');
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -366,18 +407,20 @@ export default function TodoList({ userId }: TodoListProps) {
 
     // Create optimistic task
     const optimisticTask: Todo = {
-      id: `temp-${Date.now()}`, // Temporary ID
+      id: `temp-${Date.now()}`,
       task_id: 0,
       task: newTask,
       status: false,
       created_at: new Date().toISOString(),
       due_date: today,
       sort_order: maxSortOrder + 1,
+      project_tag: newProjectTag,
     };
 
     // Optimistic update: Add to UI immediately
     setTodos((prev) => [...prev, optimisticTask]);
     setNewTask('');
+    setNewProjectTag('');
 
     // Make API call in background
     try {
@@ -388,6 +431,7 @@ export default function TodoList({ userId }: TodoListProps) {
           status: false,
           due_date: today,
           sort_order: maxSortOrder + 1,
+          project_tag: newProjectTag,
         },
       ]);
 
@@ -400,7 +444,8 @@ export default function TodoList({ userId }: TodoListProps) {
       // API call failed - revert to original state
       console.error('Failed to add task:', error);
       setTodos((prev) => prev.filter((t) => t.id !== optimisticTask.id));
-      setNewTask(newTask); // Restore the input value
+      setNewTask(newTask);
+      setNewProjectTag(newProjectTag);
       toast.error('Failed to add task');
     }
   }
@@ -428,6 +473,7 @@ export default function TodoList({ userId }: TodoListProps) {
       created_at: new Date().toISOString(),
       due_date: today,
       sort_order: maxSortOrder + 1,
+      project_tag: newProjectTag,
     };
 
     // Optimistic update: Add to UI immediately
@@ -442,6 +488,7 @@ export default function TodoList({ userId }: TodoListProps) {
           status: false,
           due_date: today,
           sort_order: maxSortOrder + 1,
+          project_tag: newProjectTag,
         },
       ]);
 
@@ -481,6 +528,7 @@ export default function TodoList({ userId }: TodoListProps) {
       created_at: new Date().toISOString(),
       due_date: today,
       sort_order: maxSortOrder + 1 + index,
+      project_tag: newProjectTag,
     }));
 
     // Optimistic update: Add to UI immediately
@@ -494,6 +542,7 @@ export default function TodoList({ userId }: TodoListProps) {
         status: false,
         due_date: today,
         sort_order: maxSortOrder + 1 + index,
+        project_tag: newProjectTag,
       }));
 
       const { error } = await supabase.from('todos').insert(tasksToAdd);
@@ -718,20 +767,27 @@ export default function TodoList({ userId }: TodoListProps) {
     }
   }
 
-  async function updateTask(taskId: string, newTaskText: string) {
+  async function updateTask(
+    taskId: string,
+    newTaskText: string,
+    newProjectTag: string
+  ) {
     // Optimistic update: Update UI immediately
     const optimisticTodos = todos.map((t) =>
-      t.id === taskId ? { ...t, task: newTaskText } : t
+      t.id === taskId
+        ? { ...t, task: newTaskText, project_tag: newProjectTag }
+        : t
     );
     setTodos(optimisticTodos);
     setEditingTask(null);
     setEditTaskText('');
+    setEditProjectTag('');
 
     // Make API call in background
     try {
       const { error } = await supabase
         .from('todos')
-        .update({ task: newTaskText })
+        .update({ task: newTaskText, project_tag: newProjectTag })
         .eq('id', taskId);
 
       if (error) throw error;
@@ -744,6 +800,7 @@ export default function TodoList({ userId }: TodoListProps) {
       await fetchTodos(); // Refresh from database to get original state
       setEditingTask(null);
       setEditTaskText('');
+      setEditProjectTag('');
       toast.error('Failed to update task');
     }
   }
@@ -751,16 +808,18 @@ export default function TodoList({ userId }: TodoListProps) {
   function handleEditTask(task: Todo) {
     setEditingTask(task);
     setEditTaskText(task.task);
+    setEditProjectTag(task.project_tag || '');
   }
 
   function handleCancelEdit() {
     setEditingTask(null);
     setEditTaskText('');
+    setEditProjectTag('');
   }
 
   function handleSaveEdit() {
     if (editingTask && editTaskText.trim()) {
-      updateTask(editingTask.id, editTaskText.trim());
+      updateTask(editingTask.id, editTaskText.trim(), editProjectTag.trim());
     }
   }
 
@@ -824,7 +883,12 @@ export default function TodoList({ userId }: TodoListProps) {
   const todosWithoutContext = todos.filter(
     (t) => !t.task.startsWith(CONTEXT_PREFIX)
   );
-  const grouped = groupByDate(todosWithoutContext);
+  // Filter by active project tag
+  const filteredTodos =
+    activeProjectTag === 'All'
+      ? todosWithoutContext
+      : todosWithoutContext.filter((t) => t.project_tag === activeProjectTag);
+  const grouped = groupByDate(filteredTodos);
 
   const now = new Date();
   const localDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000);
@@ -877,7 +941,31 @@ export default function TodoList({ userId }: TodoListProps) {
 
   return (
     <>
-      <div className='space-y-8 pb-20 max-w-2xl'>
+      {/* Project Tag Tabs */}
+      <div className='flex gap-2 mb-4 overflow-x-auto no-scrollbar w-full max-w-full pb-1 -mx-2 px-2'>
+        <button
+          className={`px-3 py-1 rounded-md border text-xs font-semibold transition-colors whitespace-nowrap min-w-fit ${
+            activeProjectTag === 'All'
+              ? 'bg-gray-800 text-white border-gray-800'
+              : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
+          }`}
+          onClick={() => setActiveProjectTag('All')}>
+          All
+        </button>
+        {PROJECT_TAGS.map((tag) => (
+          <button
+            key={tag.label}
+            className={`px-3 py-1 rounded-md border text-xs font-semibold transition-colors whitespace-nowrap min-w-fit ${
+              activeProjectTag === tag.label
+                ? 'bg-gray-800 text-white border-gray-800'
+                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
+            }`}
+            onClick={() => setActiveProjectTag(tag.label)}>
+            {tag.label}
+          </button>
+        ))}
+      </div>
+      <div className='space-y-8 pb-32 max-w-2xl w-full mx-auto px-2 sm:px-0'>
         {initialLoad && loading ? (
           <DayTasksSkeleton />
         ) : (
@@ -889,7 +977,7 @@ export default function TodoList({ userId }: TodoListProps) {
             {Object.entries(grouped).map(([date, tasks], idx) => (
               <React.Fragment key={date}>
                 <DateSection date={date}>
-                  <div className='text-xl font-bold flex flex-wrap flex-col gap-2 md:flex-row justify-between'>
+                  <div className='text-lg sm:text-xl font-bold flex flex-wrap flex-col gap-2 md:flex-row justify-between'>
                     <span className='flex items-center gap-2 flex-wrap justify-between w-full'>
                       <div className='flex items-center gap-2'>
                         {date !== today && (
@@ -904,14 +992,12 @@ export default function TodoList({ userId }: TodoListProps) {
                             )}
                           </button>
                         )}
-
                         {date === today
                           ? `Today (${formatDate(today)})`
                           : date === yesterday
                           ? `Yesterday (${formatDate(yesterday)})`
                           : formatDate(date)}
                       </div>
-
                       <div className='flex items-center gap-2'>
                         {date === yesterday && (
                           <div
@@ -931,9 +1017,10 @@ export default function TodoList({ userId }: TodoListProps) {
                               size='sm'
                               onClick={fetchTodos}
                               disabled={loading}
-                              className='text-xs'>
+                              className='h-7 w-7 p-0'
+                              title='Refresh'>
                               <RefreshCw
-                                className={`w-3 h-3 mr-1 ${
+                                className={`w-3 h-3 ${
                                   loading ? 'animate-spin' : ''
                                 }`}
                               />
@@ -942,22 +1029,25 @@ export default function TodoList({ userId }: TodoListProps) {
                               variant='outline'
                               size='sm'
                               onClick={() => moveAllDoneToToday()}
-                              className='text-xs'>
-                              Done at End
+                              className='h-7 w-7 p-0'
+                              title='Move done tasks to end'>
+                              <CornerDownRight className='w-3 h-3' />
                             </Button>
                             <Button
                               variant='outline'
                               size='sm'
                               onClick={moveAllPendingToToday}
-                              className='text-xs'>
-                              Move Pending Tasks
+                              className='h-7 w-7 p-0'
+                              title='Move pending tasks to today'>
+                              <CornerRightUp className='w-3 h-3' />
                             </Button>
                             <Button
                               variant='outline'
                               size='sm'
                               onClick={() => setShowContextModal(true)}
-                              className='text-xs'>
-                              Goals
+                              className='h-7 w-7 p-0'
+                              title='Goals'>
+                              <Target className='w-3 h-3' />
                             </Button>
                           </>
                         )}
@@ -989,6 +1079,8 @@ export default function TodoList({ userId }: TodoListProps) {
                                   setEditTaskText(text)
                                 }
                                 loading={loading}
+                                editProjectTag={editProjectTag}
+                                onEditProjectTagChange={setEditProjectTag}
                               />
                             )
                           )}
@@ -1000,9 +1092,9 @@ export default function TodoList({ userId }: TodoListProps) {
                     <div className='w-full'>
                       <form
                         onSubmit={addTodo}
-                        className='flex items-center gap-2 justify-between text-sm py-1.5 border-b border-gray-200 px-2 bg-gray-50 rounded-md'
+                        className='flex items-center gap-2 justify-between text-sm py-1.5 border-b border-gray-200 px-2 bg-gray-50 rounded-md flex-wrap sm:flex-nowrap'
                         style={{ margin: 0 }}>
-                        <div className='flex items-center gap-2 flex-1'>
+                        <div className='flex items-center gap-2 flex-1 min-w-0'>
                           <Checkbox
                             checked={false}
                             disabled
@@ -1019,11 +1111,25 @@ export default function TodoList({ userId }: TodoListProps) {
                             }}
                             placeholder='Add a new task...'
                             disabled={loading}
-                            className='flex-1  h-7 bg-white text-sm placeholder:text-sm'
+                            className='flex-1 h-7 bg-white text-sm placeholder:text-sm min-w-0'
                             autoFocus
                           />
+                          <select
+                            value={newProjectTag}
+                            onChange={(e) => setNewProjectTag(e.target.value)}
+                            className='w-28 sm:w-32 ml-2 text-xs border border-gray-300 rounded px-1 py-1 bg-white'
+                            disabled={loading}>
+                            <option value=''>Project tag</option>
+                            {PROJECT_TAGS.map((tag) => (
+                              <option
+                                key={tag.label}
+                                value={tag.label}>
+                                {tag.label}
+                              </option>
+                            ))}
+                          </select>
                         </div>
-                        <div className='flex items-center gap-1'>
+                        <div className='flex items-center gap-1 mt-2 sm:mt-0'>
                           <Button
                             type='submit'
                             size='sm'
@@ -1035,7 +1141,10 @@ export default function TodoList({ userId }: TodoListProps) {
                             type='button'
                             size='sm'
                             variant='outline'
-                            onClick={() => setNewTask('')}
+                            onClick={() => {
+                              setNewTask('');
+                              setNewProjectTag('');
+                            }}
                             disabled={loading || !newTask}
                             className='h-6 px-2 text-xs'>
                             Clear
@@ -1047,12 +1156,12 @@ export default function TodoList({ userId }: TodoListProps) {
                 </DateSection>
                 {/* Only render VoiceInputTodo once, outside the date loop */}
                 {date === today && idx === 0 && (
-                  <div className='fixed bottom-8 left-1/2 transform -translate-x-1/2 z-40'>
-                    <div className='flex items-center gap-3'>
+                  <div className='fixed bottom-2 left-1/2 transform -translate-x-1/2 z-40 w-full max-w-xs sm:max-w-md flex justify-center pointer-events-none'>
+                    <div className='flex items-center gap-3 pointer-events-auto'>
                       <VoiceInputTodo onResult={addTodoFromVoice} />
                       <div
                         onClick={() => setShowCamera(true)}
-                        className='flex flex-col items-center justify-center bg-green-500 rounded-full w-16 h-16 shadow-2xl cursor-pointer'
+                        className='flex flex-col items-center justify-center bg-green-500 rounded-full w-14 h-14 shadow-2xl cursor-pointer'
                         aria-label='Capture notebook tasks'
                         style={{
                           pointerEvents: loading ? 'none' : 'auto',
@@ -1060,7 +1169,7 @@ export default function TodoList({ userId }: TodoListProps) {
                         }}>
                         <Camera
                           className='text-white'
-                          size={24}
+                          size={22}
                         />
                       </div>
                     </div>
@@ -1090,7 +1199,6 @@ export default function TodoList({ userId }: TodoListProps) {
           </DndContext>
         )}
       </div>
-
       {/* Camera Capture Modal */}
       {showCamera && (
         <CameraCapture
@@ -1102,7 +1210,8 @@ export default function TodoList({ userId }: TodoListProps) {
       <Modal
         isModalOpen={showContextModal}
         setIsModalOpen={setShowContextModal}
-        title='Context'>
+        title='Context'
+        modalClassName='w-full max-w-full sm:max-w-lg rounded-none sm:rounded-lg p-0 sm:p-6'>
         <textarea
           className='whitespace-pre-line text-base p-2 rounded bg-gray-50 border border-gray-200 w-full min-h-[220px] h-[420px]'
           value={contextEditText}
