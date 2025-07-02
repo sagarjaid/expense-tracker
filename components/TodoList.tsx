@@ -965,7 +965,7 @@ export default function TodoList({ userId }: TodoListProps) {
   return (
     <>
       {/* Project Tag Tabs */}
-      <div className='flex gap-1 mb-4 overflow-x-auto no-scrollbar w-full max-w-full pb-1 -mx-2 px-2'>
+      <div className='flex gap-2 mb-4 overflow-x-auto no-scrollbar w-full max-w-full pb-1 -mx-2 px-2'>
         <button
           className={`px-3 py-1 rounded-md border text-xs font-semibold transition-colors whitespace-nowrap min-w-fit ${
             activeProjectTag === 'All'
