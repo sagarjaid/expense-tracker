@@ -179,7 +179,7 @@ export default function ExpenseList({
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [subcategories, setSubcategories] = useState<string[]>([]);
-  const [showDescription, setShowDescription] = useState(false);
+  const [showDescription, setShowDescription] = useState(true);
   const [popoverOpen, setPopoverOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
 
@@ -305,12 +305,12 @@ export default function ExpenseList({
     <>
       <Card className='mt-4'>
         <CardContent className='p-4'>
-          {category === 'All' && (
+          {/* {category === 'All' && (
             <BalanceSummaryBar
               selectedMonth={selectedMonth}
               selectedYear={selectedYear}
             />
-          )}
+          )} */}
           <div className='flex flex-wrap gap-4 mb-4 items-center justify-between'>
             <div className='flex flex-wrap gap-4 items-center'>
               <select
@@ -338,40 +338,36 @@ export default function ExpenseList({
                 ))}
               </select> */}
 
-              {category === 'All' && (
-                <select
-                  className='w-36 h-9 rounded-md border px-2 py-1 text-base bg-transparent'
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}>
-                  {categories.map((cat) => (
-                    <option
-                      key={cat}
-                      value={cat}>
-                      {cat}
-                    </option>
-                  ))}
-                </select>
-              )}
-              {category !== 'All' && (
-                <select
-                  className='w-36 h-9 rounded-md border px-2 py-1 text-base bg-transparent'
-                  value={subcategory}
-                  onChange={(e) => setSubcategory(e.target.value)}>
-                  <option value=''>Subcategory</option>
-                  {subcategories.map((subcat) => (
-                    <option
-                      key={subcat}
-                      value={subcat}>
-                      {subcat}
-                    </option>
-                  ))}
-                </select>
-              )}
+              <select
+                className='w-36 h-9 rounded-md border px-2 py-1 text-base bg-transparent'
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}>
+                {categories.map((cat) => (
+                  <option
+                    key={cat}
+                    value={cat}>
+                    {cat}
+                  </option>
+                ))}
+              </select>
+              <select
+                className='w-36 h-9 rounded-md border px-2 py-1 text-base bg-transparent'
+                value={subcategory}
+                onChange={(e) => setSubcategory(e.target.value)}>
+                <option value=''>All Subcategories</option>
+                {subcategories.map((subcat) => (
+                  <option
+                    key={subcat}
+                    value={subcat}>
+                    {subcat}
+                  </option>
+                ))}
+              </select>
               <Button
                 variant={showDescription ? 'default' : 'outline'}
                 onClick={() => setShowDescription((v) => !v)}
                 className='flex items-center gap-2'>
-                {showDescription ? 'Hide Description' : 'Show Description'}
+                Hide Description
               </Button>
 
               <Popover

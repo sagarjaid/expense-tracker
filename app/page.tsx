@@ -7,7 +7,9 @@ import { Button } from '@/components/ui/button';
 import ExpenseForm from '@/components/ExpenseForm';
 import ExpenseList from '@/components/ExpenseList';
 import ExpenseSummary from '@/components/ExpenseSummary';
+import ExpenseDashboard from '@/components/ExpenseDashboard';
 import ExportCSVButton from '@/components/ExportCSVButton';
+import FloatingActionButton from '@/components/FloatingActionButton';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import config from '@/config';
@@ -56,71 +58,11 @@ export default async function Dashboard() {
 
   return (
     <main className='min-h-screen p-4 pt-0 pb-24'>
-      <section className='max-w-2xl mx-auto space-y-8'>
+      <section className='max-w-3xl mx-auto space-y-8'>
         <Header />
-        <Tabs
-          defaultValue='all'
-          className='w-full'>
-          <TabsList className='mb-4'>
-            <TabsTrigger value='all'>All</TabsTrigger>
-            <TabsTrigger value='needs'>Needs</TabsTrigger>
-            <TabsTrigger value='wants'>Wants</TabsTrigger>
-            <TabsTrigger value='investment'>Investment</TabsTrigger>
-            <TabsTrigger value='summary'>Summary</TabsTrigger>
-          </TabsList>
-          <TabsContent value='all'>
-            <Card>
-              <CardHeader>
-                <CardTitle>Add Expense</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ExpenseForm />
-                <ExpenseList />
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value='needs'>
-            <Card>
-              <CardHeader>
-                <CardTitle>Needs</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ExpenseList initialCategory='Needs' />
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value='wants'>
-            <Card>
-              <CardHeader>
-                <CardTitle>Wants</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ExpenseList initialCategory='Wants' />
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value='investment'>
-            <Card>
-              <CardHeader>
-                <CardTitle>Investment</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ExpenseList initialCategory='Investment' />
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value='summary'>
-            <Card>
-              <CardHeader>
-                <CardTitle>Monthly Summary</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ExpenseSummary />
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+        <ExpenseDashboard />
       </section>
+      <FloatingActionButton />
     </main>
   );
 }

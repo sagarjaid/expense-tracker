@@ -55,6 +55,7 @@ export function DatePicker({ date, onDateChange, className }: DatePickerProps) {
   );
 }
 
+// Legacy DateRangePicker - keeping for backward compatibility
 export function DateRangePicker() {
   const [startDate, setStartDate] = useState<string>('');
   const [endDate, setEndDate] = useState<string>('');
@@ -80,3 +81,6 @@ export function DateRangePicker() {
     </div>
   );
 }
+
+// Re-export the new DateRangePicker for convenience
+export { DateRangePicker as DateRangePickerNew } from './date-range-picker-new';

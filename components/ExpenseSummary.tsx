@@ -18,7 +18,7 @@ import {
   Cell,
 } from 'recharts';
 import { format, eachDayOfInterval, isSameDay } from 'date-fns';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, ChevronDown, ChevronRight, Trash2, Pencil } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import ExportCSVButton from './ExportCSVButton';
 import {
@@ -40,6 +40,16 @@ const initialTotals: TotalsType = {
   Wants: {},
   Investment: {},
 };
+
+// Add interface for detailed expense
+interface DetailedExpense {
+  id: string;
+  amount: number;
+  description: string;
+  category: string;
+  subcategory: string;
+  date: string;
+}
 
 const monthNames = [
   'January',
@@ -202,6 +212,12 @@ export default function ExpenseSummary() {
     Wants: [],
     Investment: [],
   });
+
+  // Add new state for toggle functionality
+  const [expandedSubcategories, setExpandedSubcategories] = useState<Record<string, boolean>>({});
+  const [detailedExpenses, setDetailedExpenses] = useState<Record<string, DetailedExpense[]>>({});
+  const [loadingExpenses, setLoadingExpenses] = useState<Record<string, boolean>>({});
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // Update start/end date when month/year changes
   useEffect(() => {
@@ -436,6 +452,88 @@ export default function ExpenseSummary() {
     fetchSummary();
   }, [startDate, endDate]);
 
+  // Add function to toggle subcategory expansion
+  const toggleSubcategory = async (category: Category, subcategory: string) => {
+    const key = `${category}-${subcategory}`;
+    const isExpanded = expandedSubcategories[key];
+    
+    if (isExpanded) {
+      // Collapse
+      setExpandedSubcategories(prev => ({ ...prev, [key]: false }));
+    } else {
+      // Expand and fetch expenses
+      setExpandedSubcategories(prev => ({ ...prev, [key]: true }));
+      setLoadingExpenses(prev => ({ ...prev, [key]: true }));
+      
+      await fetchDetailedExpenses(category, subcategory);
+      setLoadingExpenses(prev => ({ ...prev, [key]: false }));
+    }
+  };
+
+  // Add function to fetch detailed expenses for a subcategory
+  const fetchDetailedExpenses = async (category: Category, subcategory: string) => {
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    
+    if (!user) return;
+
+    let query = supabase
+      .from('expenses')
+      .select('id, amount, description, category, subcategory, date')
+      .eq('user_id', user.id)
+      .eq('category', category)
+      .eq('subcategory', subcategory)
+      .order('date', { ascending: false });
+
+    if (startDate) {
+      const localStartDate = new Date(
+        startDate.getTime() - startDate.getTimezoneOffset() * 60000
+      );
+      query = query.gte('date', format(localStartDate, 'yyyy-MM-dd'));
+    }
+    if (endDate) {
+      const localEndDate = new Date(
+        endDate.getTime() - endDate.getTimezoneOffset() * 60000
+      );
+      query = query.lte('date', format(localEndDate, 'yyyy-MM-dd'));
+    }
+
+    const { data, error } = await query;
+    if (!error && data) {
+      const key = `${category}-${subcategory}`;
+      setDetailedExpenses(prev => ({ ...prev, [key]: data }));
+    }
+  };
+
+  // Add function to handle expense deletion
+  const handleDeleteExpense = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this expense?')) {
+      return;
+    }
+    
+    setDeletingId(id);
+    const supabase = createClient();
+    const { error } = await supabase.from('expenses').delete().eq('id', id);
+
+    if (error) {
+      alert('Error deleting expense: ' + error.message);
+    } else {
+      // Refresh the summary and all expanded subcategories
+      await fetchSummary();
+      
+      // Refresh all expanded subcategories
+      for (const [key, isExpanded] of Object.entries(expandedSubcategories)) {
+        if (isExpanded) {
+          const [category, subcategory] = key.split('-');
+          await fetchDetailedExpenses(category as Category, subcategory);
+        }
+      }
+    }
+    setDeletingId(null);
+  };
+
   // Years for dropdown (current year +/- 5)
   const yearOptions = Array.from(
     { length: 11 },
@@ -603,16 +701,137 @@ export default function ExpenseSummary() {
                   <div className='text-lg font-semibold mb-2'>{cat}</div>
                   <div className='grid grid-cols-1 gap-2'>
                     {mergedSubcategoriesRef.current[cat].map(
-                      (subcat: string) => (
-                        <div
-                          key={subcat}
-                          className='flex justify-between border-b py-1'>
-                          <span>{subcat}</span>
-                          <span className='text-sm'>
-                            ₹{totals[cat]?.[subcat]?.toFixed(2) || '0.00'}
-                          </span>
-                        </div>
-                      )
+                      (subcat: string) => {
+                        const key = `${cat}-${subcat}`;
+                        const isExpanded = expandedSubcategories[key];
+                        const expenses = detailedExpenses[key] || [];
+                        const isLoading = loadingExpenses[key];
+                        
+                        return (
+                          <div key={subcat}>
+                            <div
+                              className='flex justify-between py-1 cursor-pointer hover:bg-muted/50'
+                              onClick={() => toggleSubcategory(cat, subcat)}>
+                              <div className='flex items-center gap-2'>
+                                {isExpanded ? (
+                                  <ChevronDown className='h-4 w-4' />
+                                ) : (
+                                  <ChevronRight className='h-4 w-4' />
+                                )}
+                                <span>{subcat}</span>
+                              </div>
+                              <span className='text-sm'>
+                                ₹{totals[cat]?.[subcat]?.toFixed(2) || '0.00'}
+                              </span>
+                            </div>
+                            
+                            {/* Expanded expenses table */}
+                            {isExpanded && (
+                              <div className='ml-6 mt-2 mb-4 border-l-2 border-muted'>
+                                {isLoading ? (
+                                  <div className='text-center py-4 text-sm '>
+                                    Loading expenses...
+                                  </div>
+                                ) : expenses.length === 0 ? (
+                                  <div className='text-center py-4 text-sm '>
+                                    No expenses found for this subcategory
+                                  </div>
+                                ) : (
+                                  <div className='overflow-x-auto border rounded-md'>
+                                    <table className='w-full text-sm'>
+                                      <thead>
+                                        <tr className='bg-muted/50 border-b'>
+                                          <th className='px-4 py-3 text-left font-medium '>
+                                            Date
+                                          </th>
+                                          <th className='px-4 py-3 text-left font-medium '>
+                                            Description
+                                          </th>
+                                          <th className='px-3 py-3 text-center font-medium  w-12'>
+                                            Delete
+                                          </th>
+                                          <th className='px-3 py-3 text-center font-medium  w-12'>
+                                            Edit
+                                          </th>
+                                          <th className='px-3 py-3 text-right font-medium  w-[140px]'>
+                                            Amount
+                                          </th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        {expenses.map((exp) => (
+                                          <tr
+                                            key={exp.id}
+                                            className='border-b hover:bg-muted/20 transition-colors'>
+                                            <td className='px-4 py-3 whitespace-nowrap font-medium'>
+                                              {exp.date
+                                                ? format(
+                                                    new Date(exp.date + 'T00:00:00'),
+                                                    'dd/MM/yyyy'
+                                                  )
+                                                : ''}
+                                            </td>
+                                            <td className='px-4 py-3 max-w-xs truncate'>
+                                              {exp.description?.trim() ? exp.description : 'NA'}
+                                            </td>
+                                            <td className='px-3 py-3 text-center'>
+                                              <Button
+                                                variant='ghost'
+                                                size='sm'
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  handleDeleteExpense(exp.id);
+                                                }}
+                                                disabled={deletingId === exp.id}
+                                                className='h-7 w-7 p-0 hover:bg-destructive hover:text-destructive-foreground transition-colors'>
+                                                <Trash2
+                                                  className={`h-3.5 w-3.5 ${
+                                                    deletingId === exp.id ? 'animate-pulse' : ''
+                                                  }`}
+                                                />
+                                              </Button>
+                                            </td>
+                                            <td className='px-3 py-3 text-center'>
+                                              <Button
+                                                variant='ghost'
+                                                size='sm'
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  // TODO: Implement edit functionality
+                                                }}
+                                                className='h-7 w-7 p-0 hover:bg-primary hover:text-primary-foreground transition-colors'>
+                                                <Pencil className='h-3.5 w-3.5' />
+                                              </Button>
+                                            </td>
+                                            <td className='px-3 py-3 text-right font-medium'>
+                                              ₹{Number(exp.amount).toFixed(2)}
+                                            </td>
+                                          </tr>
+                                        ))}
+                                      </tbody>
+                                      {expenses.length > 2 && (
+                                        <tfoot>
+                                          <tr className='border-t-2 border-muted bg-muted/50'>
+                                            <td className='px-4 py-3 font-semibold '>
+                                              Total
+                                            </td>
+                                            <td className='px-4 py-3'></td>
+                                            <td className='px-3 py-3'></td>
+                                            <td className='px-3 py-3'></td>
+                                            <td className='px-3 py-3 text-right font-semibold '>
+                                              ₹{expenses.reduce((sum, exp) => sum + Number(exp.amount), 0).toFixed(2)}
+                                            </td>
+                                          </tr>
+                                        </tfoot>
+                                      )}
+                                    </table>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      }
                     )}
                   </div>
                   <div className='mt-2 font-medium text-sm text-right'>

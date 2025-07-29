@@ -5,6 +5,7 @@ import React, { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
 import { format, parse } from 'date-fns';
+import { Download } from 'lucide-react';
 
 function toCSV(rows: any[]) {
   if (!rows.length) return '';
@@ -91,8 +92,9 @@ export default function ExportCSVButton() {
         onClick={handleExport}
         disabled={loading}
         variant='outline'
-        className='flex items-center gap-2'>
-        {loading ? 'Exporting...' : 'Export CSV'}
+        size='sm'
+        className='h-8 px-2'>
+        <Download className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} />
       </Button>
       {error && <div className='text-sm text-red-500 mt-2'>{error}</div>}
     </div>
