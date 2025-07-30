@@ -14,7 +14,7 @@ function toCSV(rows: any[]) {
   console.log('Raw data from DB:', rows);
 
   // Define the headers in the desired order
-  const headers = ['date', 'category', 'subcategory', 'description', 'amount'];
+  const headers = ['date', 'category', 'subcategory', 'description', 'source', 'amount'];
 
   // Sort rows by date first
   const sortedRows = [...rows].sort((a, b) => {
@@ -65,7 +65,7 @@ export default function ExportCSVButton() {
     }
     const { data, error } = await supabase
       .from('expenses')
-      .select('date, category, subcategory, description, amount')
+      .select('date, category, subcategory, description, source, amount')
       .eq('user_id', user.id);
     if (error || !data) {
       setError('Failed to fetch expenses.');

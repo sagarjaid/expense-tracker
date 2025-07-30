@@ -49,6 +49,7 @@ interface DetailedExpense {
   category: string;
   subcategory: string;
   date: string;
+  source: string;
 }
 
 const monthNames = [
@@ -280,7 +281,7 @@ export default function ExpenseSummary() {
 
       let query = supabase
         .from('expenses')
-        .select('amount, category, subcategory, date')
+        .select('amount, category, subcategory, date, source')
         .eq('user_id', user.id);
       if (startDate) {
         const localStartDate = new Date(
@@ -481,7 +482,7 @@ export default function ExpenseSummary() {
 
     let query = supabase
       .from('expenses')
-      .select('id, amount, description, category, subcategory, date')
+      .select('id, amount, description, category, subcategory, date, source')
       .eq('user_id', user.id)
       .eq('category', category)
       .eq('subcategory', subcategory)

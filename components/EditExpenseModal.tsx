@@ -16,6 +16,7 @@ interface Expense {
   category: string;
   subcategory: string;
   date: string;
+  source: string;
 }
 
 interface EditExpenseModalProps {
@@ -39,6 +40,7 @@ export default function EditExpenseModal({
     category: string;
     subcategory: string;
     date: Date | undefined;
+    source: string;
   }) => {
     if (!expense) return;
 
@@ -70,6 +72,7 @@ export default function EditExpenseModal({
       category: formData.category,
       subcategory: formData.subcategory,
       date: localDate ? format(localDate, 'yyyy-MM-dd') : undefined,
+      source: formData.source,
     };
 
     const { error } = await supabase
@@ -103,6 +106,7 @@ export default function EditExpenseModal({
             date: expense.date
               ? new Date(expense.date + 'T00:00:00')
               : undefined,
+            source: expense.source || 'Bank A/C',
           }}
           onSubmit={handleSubmit}
           loading={loading}

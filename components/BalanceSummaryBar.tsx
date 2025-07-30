@@ -76,7 +76,7 @@ export default function BalanceSummaryBar({
     <div className='mb-6  p-4 bg-muted rounded-lg shadow-sm px-4 py-3 flex flex-col sm:flex-row  justify-between gap-4'>
       <div className='flex-1'>
         <div className='text-xs text-muted-foreground mb-0.5'>
-          Starting Balance
+          Balance
         </div>
         <div className='text-lg font-bold'>
           ₹

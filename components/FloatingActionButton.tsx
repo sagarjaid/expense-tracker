@@ -7,6 +7,14 @@ import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import ExpenseForm from './ExpenseForm';
 import { createClient } from '@/lib/supabase/client';
+import { format } from 'date-fns';
+
+// Helper function to get first and last day of month
+function getFirstAndLastDayOfMonth(year: number, month: number) {
+  const first = new Date(year, month, 1);
+  const last = new Date(year, month + 1, 0);
+  return { first, last };
+}
 
 export default function FloatingActionButton() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -14,8 +22,7 @@ export default function FloatingActionButton() {
   const [totals, setTotals] = useState<Record<string, Record<string, number>>>({});
 
   // Fetch balance and totals data
-  useEffect(() => {
-    const fetchData = async () => {
+  const fetchData = async () => {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
       
@@ -33,11 +40,18 @@ export default function FloatingActionButton() {
 
       setStartingBalance(balanceData?.amount || null);
 
-      // Fetch expenses for totals
+      // Fetch expenses for totals (current month only)
+      const { first: monthStart, last: monthEnd } = getFirstAndLastDayOfMonth(
+        currentDate.getFullYear(),
+        currentDate.getMonth()
+      );
+      
       const { data: expenses } = await supabase
         .from('expenses')
-        .select('amount, category, subcategory')
-        .eq('user_id', user.id);
+        .select('amount, category, subcategory, date')
+        .eq('user_id', user.id)
+        .gte('date', format(monthStart, 'yyyy-MM-dd'))
+        .lte('date', format(monthEnd, 'yyyy-MM-dd'));
 
       if (expenses) {
         const totalsData: Record<string, Record<string, number>> = {};
@@ -54,6 +68,7 @@ export default function FloatingActionButton() {
       }
     };
 
+  useEffect(() => {
     fetchData();
   }, []);
 
@@ -78,7 +93,15 @@ export default function FloatingActionButton() {
           showBalanceSummary={true}
           startingBalance={startingBalance}
           totals={totals}
-          onBalanceUpdate={(newBalance) => setStartingBalance(newBalance)}
+          onBalanceUpdate={(newBalance) => {
+            setStartingBalance(newBalance);
+            // Refresh totals after balance update
+            fetchData();
+          }}
+          onSubmit={async (formData) => {
+            // After successful submission, refresh the data
+            await fetchData();
+          }}
         />
       )}
     </>

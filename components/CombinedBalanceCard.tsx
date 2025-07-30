@@ -2,7 +2,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -34,7 +34,7 @@ export default function CombinedBalanceCard({
   const [balanceId, setBalanceId] = useState<string | null>(null);
   const [totalSpent, setTotalSpent] = useState<number>(0);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     const supabase = createClient();
     const {
@@ -49,13 +49,15 @@ export default function CombinedBalanceCard({
     }
 
     // Fetch starting balance
-    const { data: balanceData } = await supabase
+    const { data: balanceData, error: balanceError } = await supabase
       .from('monthly_balances')
       .select('*')
       .eq('user_id', user.id)
       .eq('month', selectedMonth)
       .eq('year', selectedYear)
       .single();
+
+
 
     if (balanceData) {
       setBalance(balanceData.amount);
@@ -92,11 +94,11 @@ export default function CombinedBalanceCard({
     }
 
     setLoading(false);
-  };
+  }, [selectedMonth, selectedYear]);
 
   useEffect(() => {
     fetchData();
-  }, [selectedMonth, selectedYear]);
+  }, [fetchData]);
 
   useEffect(() => {
     if (balance === null) {
@@ -123,22 +125,37 @@ export default function CombinedBalanceCard({
       return;
     }
 
-    const payload: any = {
-      user_id: user.id,
-      month: selectedMonth,
-      year: selectedYear,
-      amount: tempBalance,
-    };
-    if (balanceId) payload.id = balanceId;
+    let result;
+    
+    if (balanceId) {
+      // Update existing record
+      result = await supabase
+        .from('monthly_balances')
+        .update({ amount: tempBalance })
+        .eq('id', balanceId);
+    } else {
+      // Insert new record
+      const payload = {
+        user_id: user.id,
+        month: selectedMonth,
+        year: selectedYear,
+        amount: tempBalance,
+      };
+      
+      result = await supabase
+        .from('monthly_balances')
+        .insert(payload);
+    }
 
-    const { error } = await supabase.from('monthly_balances').upsert(payload);
-
-    if (error) {
-      toast.error('Error saving balance');
+    if (result.error) {
+      toast.error(`Error saving balance: ${result.error.message}`);
     } else {
       toast.success('Balance saved successfully');
       setBalance(tempBalance);
       setIsEditing(false);
+      
+      // Refresh the data to ensure we have the latest state
+      await fetchData();
     }
     setSaving(false);
   };
@@ -159,6 +176,8 @@ export default function CombinedBalanceCard({
     ? balance - totalSpent
     : 0 - totalSpent;
 
+
+
   if (loading) {
     return <div className='text-center py-4'>Loading balance...</div>;
   }
@@ -166,6 +185,8 @@ export default function CombinedBalanceCard({
   return (
     <Card className='mb-4'>
       <CardContent className='p-3'>
+
+        
         <div className='flex flex-col lg:flex-row gap-6 items-start lg:items-center'>
           {/* Starting Balance Section */}
           <div className='flex-1 min-w-0'>

@@ -65,6 +65,7 @@ interface Expense {
   category: string;
   subcategory: string;
   date: string;
+  source: string;
 }
 
 function CategoryPieChart({
@@ -212,7 +213,7 @@ export default function ExpenseList({
     }
     let query = supabase
       .from('expenses')
-      .select('id, amount, description, category, subcategory, date')
+      .select('id, amount, description, category, subcategory, date, source')
       .eq('user_id', user.id)
       .order('date', { ascending: false });
     if (category !== 'All') {

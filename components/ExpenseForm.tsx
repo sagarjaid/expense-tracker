@@ -23,6 +23,7 @@ interface ExpenseFormProps {
     category: string;
     subcategory: string;
     date: Date | undefined;
+    source: string;
   };
   onSubmit?: (formData: {
     amount: string;
@@ -30,6 +31,7 @@ interface ExpenseFormProps {
     category: string;
     subcategory: string;
     date: Date | undefined;
+    source: string;
   }) => Promise<void>;
   loading?: boolean;
   submitLabel?: string;
@@ -74,6 +76,7 @@ export default function ExpenseForm({
   const [date, setDate] = useState<Date | undefined>(
     initialValues?.date || new Date()
   );
+  const [source, setSource] = useState(initialValues?.source || 'Bank A/C');
   const [internalLoading, setInternalLoading] = useState(false);
   const [subcategories, setSubcategories] = useState<string[]>([]);
   const [addingSubcategory, setAddingSubcategory] = useState(false);
@@ -151,20 +154,42 @@ export default function ExpenseForm({
 
     const amount = Number(tempBalance);
     const currentDate = new Date();
-    const { error } = await supabase
+    
+    // First, try to find existing balance for the current month/year
+    const { data: existingBalance } = await supabase
       .from('monthly_balances')
-      .upsert({
-        user_id: user.id,
-        month: currentDate.getMonth(),
-        year: currentDate.getFullYear(),
-        amount: amount,
-      });
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('month', currentDate.getMonth())
+      .eq('year', currentDate.getFullYear())
+      .single();
 
-    if (!error) {
+    let result;
+    if (existingBalance) {
+      // Update existing record
+      result = await supabase
+        .from('monthly_balances')
+        .update({ amount: amount })
+        .eq('id', existingBalance.id);
+    } else {
+      // Insert new record
+      result = await supabase
+        .from('monthly_balances')
+        .insert({
+          user_id: user.id,
+          month: currentDate.getMonth(),
+          year: currentDate.getFullYear(),
+          amount: amount,
+        });
+    }
+
+    if (!result.error) {
       setIsEditingBalance(false);
       if (onBalanceUpdate) {
         onBalanceUpdate(amount);
       }
+    } else {
+      console.error('Error saving balance:', result.error);
     }
     setSavingBalance(false);
   };
@@ -204,6 +229,7 @@ export default function ExpenseForm({
         category,
         subcategory,
         date,
+        source,
       });
       return;
     }
@@ -236,6 +262,7 @@ export default function ExpenseForm({
       category,
       subcategory,
       date: localDate ? format(localDate, 'yyyy-MM-dd') : undefined,
+      source,
     };
 
     if (mode === 'edit' && expenseId) {
@@ -265,6 +292,7 @@ export default function ExpenseForm({
         setCategory(categoryOptions[0]);
         setSubcategory(defaultSubcategories[categoryOptions[0]][0]);
         setDate(new Date());
+        setSource('Bank A/C'); // Reset source to default
         if (isModal && onClose) {
           onClose();
         }
@@ -300,6 +328,9 @@ export default function ExpenseForm({
               setSubcategory(data.subcategory);
             }
             if (data.date) setDate(data.date);
+            if (data.source && ['Bank A/C', 'Credit Card', 'BNPL'].includes(data.source)) {
+              setSource(data.source);
+            }
           }}
         />
       )}
@@ -393,6 +424,19 @@ export default function ExpenseForm({
             </Button>
           </div>
         )}
+      </div>
+ 
+      <div>
+        <label className='block mb-1 font-medium text-sm'>Source</label>
+        <select
+          className='w-full h-9 rounded-md border px-3 py-1 text-base bg-transparent'
+          value={source}
+          onChange={(e) => setSource(e.target.value)}
+          required>
+          <option value='Bank A/C'>Bank A/C</option>
+          <option value='Credit Card'>Credit Card</option>
+          <option value='BNPL'>BNPL</option>
+        </select>
       </div>
       <div>
         <label className='block mb-1 font-medium text-sm'>Date</label>

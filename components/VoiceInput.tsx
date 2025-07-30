@@ -16,6 +16,7 @@ interface VoiceInputProps {
       category: string;
       subcategory: string;
       date: Date;
+      source: string;
     }>
   ) => void;
 }

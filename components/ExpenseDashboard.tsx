@@ -55,6 +55,7 @@ interface Expense {
   category: string;
   subcategory: string;
   date: string;
+  source: string;
 }
 
 interface DetailedExpense {
@@ -64,6 +65,7 @@ interface DetailedExpense {
   category: string;
   subcategory: string;
   date: string;
+  source: string;
 }
 
 interface ChartDataPoint {
@@ -168,7 +170,7 @@ export default function ExpenseDashboard() {
   const [loadingExpenses, setLoadingExpenses] = useState<Record<string, boolean>>({});
   
   // Sorting state
-  const [sortField, setSortField] = useState<'date' | 'category' | 'subcategory' | 'amount'>('date');
+  const [sortField, setSortField] = useState<'date' | 'category' | 'subcategory' | 'amount' | 'source'>('date');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
 
@@ -193,7 +195,7 @@ export default function ExpenseDashboard() {
     }
     let query = supabase
       .from('expenses')
-      .select('id, amount, description, category, subcategory, date')
+      .select('id, amount, description, category, subcategory, date, source')
       .eq('user_id', user.id)
       .order('date', { ascending: false });
     if (category !== 'All') {
@@ -256,7 +258,7 @@ export default function ExpenseDashboard() {
 
     let query = supabase
       .from('expenses')
-      .select('amount, category, subcategory, date')
+      .select('amount, category, subcategory, date, source')
       .eq('user_id', user.id);
     if (startDate) {
       const localStartDate = new Date(
@@ -483,7 +485,7 @@ export default function ExpenseDashboard() {
 
     let query = supabase
       .from('expenses')
-      .select('id, amount, description, category, subcategory, date')
+      .select('id, amount, description, category, subcategory, date, source')
       .eq('user_id', user.id)
       .eq('category', category)
       .eq('subcategory', subcategory)
@@ -536,7 +538,7 @@ export default function ExpenseDashboard() {
   };
 
   // Sorting function
-  const handleSort = (field: 'date' | 'category' | 'subcategory' | 'amount') => {
+  const handleSort = (field: 'date' | 'category' | 'subcategory' | 'amount' | 'source') => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
@@ -567,6 +569,10 @@ export default function ExpenseDashboard() {
       case 'amount':
         aValue = Number(a.amount);
         bValue = Number(b.amount);
+        break;
+      case 'source':
+        aValue = a.source.toLowerCase();
+        bValue = b.source.toLowerCase();
         break;
       default:
         return 0;
@@ -771,6 +777,19 @@ export default function ExpenseDashboard() {
                           <th className='px-3 py-2 text-left whitespace-nowrap'>Description</th>
                           <th 
                             className='px-3 py-2 text-left whitespace-nowrap cursor-pointer hover:bg-muted/50 select-none'
+                            onClick={() => handleSort('source')}
+                          >
+                            <div className='flex items-center gap-1'>
+                              Source
+                              {sortField === 'source' && (
+                                sortDirection === 'asc' ? 
+                                  <ChevronUp className='h-3 w-3' /> : 
+                                  <ChevronDownIcon className='h-3 w-3' />
+                              )}
+                            </div>
+                          </th>
+                          <th 
+                            className='px-3 py-2 text-left whitespace-nowrap cursor-pointer hover:bg-muted/50 select-none'
                             onClick={() => handleSort('amount')}
                           >
                             <div className='flex items-center gap-1'>
@@ -799,6 +818,7 @@ export default function ExpenseDashboard() {
                             <td className='px-3 py-2 whitespace-nowrap'>
                               {exp.description?.trim() ? exp.description : 'NA'}
                             </td>
+                            <td className='px-3 py-2 whitespace-nowrap'>{exp.source || 'Bank A/C'}</td>
                             <td className='px-3 py-2 whitespace-nowrap'>
                               {Number(exp.amount).toFixed(2)}
                             </td>
@@ -901,6 +921,7 @@ export default function ExpenseDashboard() {
                                         <tr className='bg-muted/50 border-b'>
                                           <th className='px-4 py-3 text-left font-medium'>Date</th>
                                           <th className='px-4 py-3 text-left font-medium'>Description</th>
+                                          <th className='px-3 py-3 text-left font-medium'>Source</th>
                                           <th className='px-3 py-3 text-center font-medium w-12'>Delete</th>
                                           <th className='px-3 py-3 text-center font-medium w-12'>Edit</th>
                                           <th className='px-3 py-3 text-right font-medium w-[140px]'>Amount</th>
@@ -917,6 +938,7 @@ export default function ExpenseDashboard() {
                                             <td className='px-4 py-3 max-w-xs truncate'>
                                               {exp.description?.trim() ? exp.description : 'NA'}
                                             </td>
+                                            <td className='px-3 py-3 whitespace-nowrap'>{exp.source || 'Bank A/C'}</td>
                                             <td className='px-3 py-3 text-center'>
                                               <Button
                                                 variant='ghost'
@@ -940,7 +962,7 @@ export default function ExpenseDashboard() {
                                                 size='sm'
                                                 onClick={(e) => {
                                                   e.stopPropagation();
-                                                  // TODO: Implement edit functionality
+                                                  handleEdit(exp.id);
                                                 }}
                                                 className='h-7 w-7 p-0 hover:bg-primary hover:text-primary-foreground transition-colors'>
                                                 <Pencil className='h-3.5 w-3.5' />
@@ -957,6 +979,7 @@ export default function ExpenseDashboard() {
                                           <tr className='border-t-2 border-muted bg-muted/50'>
                                             <td className='px-4 py-3 font-semibold'>Total</td>
                                             <td className='px-4 py-3'></td>
+                                            <td className='px-3 py-3'></td>
                                             <td className='px-3 py-3'></td>
                                             <td className='px-3 py-3'></td>
                                             <td className='px-3 py-3 text-right font-semibold'>
@@ -1021,6 +1044,7 @@ export default function ExpenseDashboard() {
             category: editingExpense.category,
             subcategory: editingExpense.subcategory,
             date: new Date(editingExpense.date),
+            source: editingExpense.source || 'Bank A/C',
           }}
           isModal={true}
           onClose={() => {
