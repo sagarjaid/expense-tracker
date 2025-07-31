@@ -82,7 +82,10 @@ export function DateRangePicker({
   const handlePreset = React.useCallback((from: Date, to: Date) => {
     setDateFrom(from)
     setDateTo(to)
-  }, [])
+    // Automatically call update when preset is selected
+    onUpdate?.({ from, to })
+    setIsOpen(false)
+  }, [onUpdate])
 
   const handleDateInputChange = React.useCallback((field: 'from' | 'to', value: string) => {
     const date = new Date(value)
@@ -103,8 +106,8 @@ export function DateRangePicker({
     const last30Days = subDays(today, 30)
     const thisMonthStart = startOfMonth(today)
     const thisMonthEnd = endOfMonth(today)
-    const lastMonthStart = startOfMonth(subDays(today, 30))
-    const lastMonthEnd = endOfMonth(subDays(today, 30))
+    const lastMonthStart = startOfMonth(new Date(today.getFullYear(), today.getMonth() - 1, 1))
+    const lastMonthEnd = endOfMonth(new Date(today.getFullYear(), today.getMonth() - 1, 1))
     
     // This year (Jan 1 to Dec 31 of current year)
     const thisYearStart = new Date(today.getFullYear(), 0, 1)

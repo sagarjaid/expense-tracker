@@ -205,16 +205,14 @@ const ExpenseDashboard = React.forwardRef<{ refresh: () => void }, {}>((props, r
       query = query.eq('subcategory', subcategory);
     }
     if (startDate) {
-      const localStartDate = new Date(
-        startDate.getTime() - startDate.getTimezoneOffset() * 60000
-      );
-      query = query.gte('date', format(localStartDate, 'yyyy-MM-dd'));
+      // Ensure we're filtering from the start of the selected date
+      const startDateStr = format(startDate, 'yyyy-MM-dd');
+      query = query.gte('date', startDateStr);
     }
     if (endDate) {
-      const localEndDate = new Date(
-        endDate.getTime() - endDate.getTimezoneOffset() * 60000
-      );
-      query = query.lte('date', format(localEndDate, 'yyyy-MM-dd'));
+      // Ensure we're filtering up to the end of the selected date
+      const endDateStr = format(endDate, 'yyyy-MM-dd');
+      query = query.lte('date', endDateStr);
     }
     const { data, error } = await query;
     if (!error) {
@@ -261,16 +259,14 @@ const ExpenseDashboard = React.forwardRef<{ refresh: () => void }, {}>((props, r
       .select('amount, category, subcategory, date, source')
       .eq('user_id', user.id);
     if (startDate) {
-      const localStartDate = new Date(
-        startDate.getTime() - startDate.getTimezoneOffset() * 60000
-      );
-      query = query.gte('date', format(localStartDate, 'yyyy-MM-dd'));
+      // Ensure we're filtering from the start of the selected date
+      const startDateStr = format(startDate, 'yyyy-MM-dd');
+      query = query.gte('date', startDateStr);
     }
     if (endDate) {
-      const localEndDate = new Date(
-        endDate.getTime() - endDate.getTimezoneOffset() * 60000
-      );
-      query = query.lte('date', format(localEndDate, 'yyyy-MM-dd'));
+      // Ensure we're filtering up to the end of the selected date
+      const endDateStr = format(endDate, 'yyyy-MM-dd');
+      query = query.lte('date', endDateStr);
     }
     const { data, error } = await query;
     
@@ -492,16 +488,14 @@ const ExpenseDashboard = React.forwardRef<{ refresh: () => void }, {}>((props, r
       .order('date', { ascending: false });
 
     if (startDate) {
-      const localStartDate = new Date(
-        startDate.getTime() - startDate.getTimezoneOffset() * 60000
-      );
-      query = query.gte('date', format(localStartDate, 'yyyy-MM-dd'));
+      // Ensure we're filtering from the start of the selected date
+      const startDateStr = format(startDate, 'yyyy-MM-dd');
+      query = query.gte('date', startDateStr);
     }
     if (endDate) {
-      const localEndDate = new Date(
-        endDate.getTime() - endDate.getTimezoneOffset() * 60000
-      );
-      query = query.lte('date', format(localEndDate, 'yyyy-MM-dd'));
+      // Ensure we're filtering up to the end of the selected date
+      const endDateStr = format(endDate, 'yyyy-MM-dd');
+      query = query.lte('date', endDateStr);
     }
 
     const { data, error } = await query;
