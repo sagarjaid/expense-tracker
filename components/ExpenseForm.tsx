@@ -456,9 +456,9 @@ export default function ExpenseForm({
 
   if (isModal) {
     return (
-      <div className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[99999] p-2 sm:p-4'>
+      <div className='fixed inset-0 top-0 bg-black bg-opacity-50 flex items-center justify-center z-[99999] p-2 sm:p-4'>
         <div className='bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md sm:max-w-lg max-h-[95vh] sm:max-h-[90vh] overflow-y-auto'>
-          <div className='flex justify-between items-center p-4 sm:p-6 border-b'>
+          <div className='flex justify-between items-center p-3 border-b'>
             <h2 className='text-lg sm:text-xl font-semibold'>
               {mode === 'edit' ? 'Edit Expense' : 'Add Expense'}
             </h2>
@@ -470,10 +470,10 @@ export default function ExpenseForm({
               <X className='h-4 w-4' />
             </Button>
           </div>
-          <div className='p-4 sm:p-6'>
+          <div className='p-4'>
             {/* Balance Summary */}
             {showBalanceSummary && (
-              <div ref={balanceCardRef} className='bg-gray-100 rounded-md p-2 sm:p-3 border border-gray-200 mb-4'>
+              <div ref={balanceCardRef} className='bg-gray-100 rounded-md p-2 sm:p-3 border border-gray-200 mb-2'>
                 {isEditingBalance ? (
                   <div className='space-y-2 sm:space-y-0 sm:flex sm:items-center sm:gap-3'>
                     <div className='flex items-center gap-2'>

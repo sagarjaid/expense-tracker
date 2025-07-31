@@ -56,7 +56,7 @@ export default async function Dashboard() {
 
   return (
     <main className='min-h-screen p-4 pt-0 pb-32'>
-      <section className='max-w-3xl mx-auto space-y-8'>
+      <section className='max-w-3xl mx-auto'>
         <Header />
         <DashboardWrapper />
       </section>
