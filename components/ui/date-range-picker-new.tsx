@@ -155,7 +155,7 @@ export function DateRangePicker({
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align={align}>
+      <PopoverContent className="w-auto p-0 z-[999999]" align={align}>
         <div className="flex">
           <div className="p-3">
             <div className="space-y-2">

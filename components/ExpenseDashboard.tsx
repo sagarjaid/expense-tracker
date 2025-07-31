@@ -1,7 +1,7 @@
 /** @format */
 
 'use client';
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useImperativeHandle } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DateRangePicker } from '@/components/ui/date-range-picker-new';
@@ -122,7 +122,7 @@ const MainCategoryTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-export default function ExpenseDashboard() {
+const ExpenseDashboard = React.forwardRef<{ refresh: () => void }, {}>((props, ref) => {
   const now = new Date();
   const { first: defaultStart, last: defaultEnd } = getFirstAndLastDayOfMonth(
     now.getFullYear(),
@@ -590,6 +590,14 @@ export default function ExpenseDashboard() {
     `px-4 py-2 rounded-t-md text-sm cursor-pointer ${
       activeTab === tab ? 'border border-b-0 font-medium' : 'border-gray-200'
     }`;
+
+  // Expose refresh method to parent component
+  useImperativeHandle(ref, () => ({
+    refresh: () => {
+      fetchExpenses();
+      fetchSummary();
+    }
+  }));
 
   return (
     <Card className='mt-0 space-t-0'>
@@ -1062,4 +1070,8 @@ export default function ExpenseDashboard() {
       )}
     </Card>
   );
-} 
+});
+
+ExpenseDashboard.displayName = 'ExpenseDashboard';
+
+export default ExpenseDashboard;

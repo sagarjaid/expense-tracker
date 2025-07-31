@@ -7,9 +7,7 @@ import { Button } from '@/components/ui/button';
 import ExpenseForm from '@/components/ExpenseForm';
 import ExpenseList from '@/components/ExpenseList';
 import ExpenseSummary from '@/components/ExpenseSummary';
-import ExpenseDashboard from '@/components/ExpenseDashboard';
-import ExportCSVButton from '@/components/ExportCSVButton';
-import FloatingActionButton from '@/components/FloatingActionButton';
+import DashboardWrapper from '@/components/DashboardWrapper';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import config from '@/config';
@@ -57,12 +55,11 @@ export default async function Dashboard() {
   }
 
   return (
-    <main className='min-h-screen p-4 pt-0 pb-24'>
+    <main className='min-h-screen p-4 pt-0 pb-32'>
       <section className='max-w-3xl mx-auto space-y-8'>
         <Header />
-        <ExpenseDashboard />
+        <DashboardWrapper />
       </section>
-      <FloatingActionButton />
     </main>
   );
 }

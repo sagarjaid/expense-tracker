@@ -382,7 +382,7 @@ export default function ExpenseList({
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent
-                  className='w-auto p-4'
+                  className='w-auto p-4 z-[999999]'
                   align='start'>
                   <div className='flex flex-col gap-4 justify-end'>
                     <div className='flex gap-2 items-center justify-end'>
