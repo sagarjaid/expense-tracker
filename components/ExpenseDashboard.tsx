@@ -616,7 +616,23 @@ const ExpenseDashboard = React.forwardRef<{ refresh: () => void }, {}>((props, r
           </div>
           
           <div className='flex items-center gap-2'>
-          {activeTab === 'list' && (
+            {/* Average per day calculation */}
+            {startDate && endDate && (
+              <div className='text-sm px-2 py-1 border border-gray-200 rounded-md'>
+                Avg/day: ₹
+                <span className='font-bold'>
+                {(() => {
+                  const totalAmount = expenses
+                    .filter(exp => exp.category === 'Needs' || exp.category === 'Wants')
+                    .reduce((sum, exp) => sum + Number(exp.amount), 0);
+                  const daysDiff = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+                  const avgPerDay = daysDiff > 0 ? totalAmount / daysDiff : 0;
+                  return avgPerDay.toFixed(1);
+                })()}
+                </span>
+              </div>
+            )}
+            {activeTab === 'list' && (
               <>
                 <select
                   className='w-24 h-8 rounded-md border px-2 py-1 text-sm bg-transparent'
