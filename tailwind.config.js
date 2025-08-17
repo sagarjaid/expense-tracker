@@ -115,6 +115,8 @@ module.exports = {
           4: 'hsl(var(--chart-4))',
           5: 'hsl(var(--chart-5))',
         },
+        'text-soft': 'hsl(var(--text-soft))',
+        'text-softer': 'hsl(var(--text-softer))',
       },
       borderRadius: {
         lg: 'var(--radius)',

@@ -335,7 +335,7 @@ export default function ExpenseForm({
         />
       )}
       <div>
-        <label className='block mb-1 font-medium text-sm'>Amount</label>
+        <label className='block mb-1 font-medium text-sm text-foreground'>Amount</label>
         <Input
           type='number'
           min='0'
@@ -346,7 +346,7 @@ export default function ExpenseForm({
         />
       </div>
       <div>
-        <label className='block mb-1 font-medium text-sm'>Description</label>
+        <label className='block mb-1 font-medium text-sm text-foreground'>Description</label>
         <Input
           type='text'
           value={description}
@@ -354,9 +354,9 @@ export default function ExpenseForm({
         />
       </div>
       <div>
-        <label className='block mb-1 font-medium text-sm'>Category</label>
+        <label className='block mb-1 font-medium text-sm text-foreground'>Category</label>
         <select
-          className='w-full h-9 rounded-md border px-3 py-1 text-base bg-transparent'
+          className='w-full h-9 rounded-md border border-border px-3 py-1 text-base bg-background text-foreground'
           value={category}
           onChange={(e) => handleCategoryChange(e.target.value)}
           required>
@@ -370,9 +370,9 @@ export default function ExpenseForm({
         </select>
       </div>
       <div>
-        <label className='block mb-1 font-medium text-sm'>Subcategory</label>
+        <label className='block mb-1 font-medium text-sm text-foreground'>Subcategory</label>
         <select
-          className='w-full h-9 rounded-md border px-3 py-1 text-base bg-transparent'
+          className='w-full h-9 rounded-md border border-border px-3 py-1 text-base bg-background text-foreground'
           value={addingSubcategory ? '__add_new__' : subcategory}
           onChange={(e) => {
             if (e.target.value === '__add_new__') {
@@ -419,7 +419,8 @@ export default function ExpenseForm({
               onClick={() => {
                 setAddingSubcategory(false);
                 setNewSubcategory('');
-              }}>
+              }}
+              className='border-border text-foreground hover:bg-muted'>
               Cancel
             </Button>
           </div>
@@ -427,9 +428,9 @@ export default function ExpenseForm({
       </div>
  
       <div>
-        <label className='block mb-1 font-medium text-sm'>Source</label>
+        <label className='block mb-1 font-medium text-sm text-foreground'>Source</label>
         <select
-          className='w-full h-9 rounded-md border px-3 py-1 text-base bg-transparent'
+          className='w-full h-9 rounded-md border border-border px-3 py-1 text-base bg-background text-foreground'
           value={source}
           onChange={(e) => setSource(e.target.value)}
           required>
@@ -439,7 +440,7 @@ export default function ExpenseForm({
         </select>
       </div>
       <div>
-        <label className='block mb-1 font-medium text-sm'>Date</label>
+        <label className='block mb-1 font-medium text-sm text-foreground'>Date</label>
         <DatePicker
           date={date}
           onDateChange={setDate}
@@ -448,7 +449,7 @@ export default function ExpenseForm({
               <Button
           type='submit'
           disabled={loading}
-          className='w-full'>
+          className='w-full bg-primary text-primary-foreground hover:bg-primary/90'>
           {loading ? 'Saving...' : finalSubmitLabel}
         </Button>
     </form>
@@ -456,34 +457,40 @@ export default function ExpenseForm({
 
   if (isModal) {
     return (
-      <div className='fixed inset-0 top-0 bg-black bg-opacity-50 flex items-center justify-center z-[99999] p-2 sm:p-4'>
-        <div className='bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md sm:max-w-lg max-h-[95vh] sm:max-h-[90vh] overflow-y-auto'>
-          <div className='flex justify-between items-center p-3 border-b'>
-            <h2 className='text-lg sm:text-xl font-semibold'>
+      <div 
+        className='fixed inset-0 top-0 bg-black/50 flex items-center justify-center z-[99999] p-2 sm:p-4'
+        onClick={onClose}
+      >
+        <div 
+          className='bg-background border border-border rounded-lg shadow-xl w-full max-w-md sm:max-w-lg max-h-[95vh] sm:max-h-[90vh] overflow-y-auto'
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className='flex justify-between items-center p-4 border-b border-border'>
+            <h2 className='text-base font-semibold text-foreground'>
               {mode === 'edit' ? 'Edit Expense' : 'Add Expense'}
             </h2>
             <Button
               variant='ghost'
               size='sm'
               onClick={onClose}
-              className='h-8 w-8 p-0'>
+              className='h-8 w-8 p-0 hover:bg-muted'>
               <X className='h-4 w-4' />
             </Button>
           </div>
           <div className='p-4'>
             {/* Balance Summary */}
             {showBalanceSummary && (
-              <div ref={balanceCardRef} className='bg-gray-100 rounded-md p-2 sm:p-3 border border-gray-200 mb-2'>
+              <div ref={balanceCardRef} className='bg-muted/50 rounded-md p-2 sm:p-3 border border-border mb-2'>
                 {isEditingBalance ? (
                   <div className='space-y-2 sm:space-y-0 sm:flex sm:items-center sm:gap-3'>
                     <div className='flex items-center gap-2'>
-                      <span className='text-sm text-gray-600'>Balance:</span>
+                      <span className='text-sm text-muted-foreground'>Balance:</span>
                       <input
                         type='number'
                         value={tempBalance}
                         onChange={(e) => setTempBalance(e.target.value)}
                         placeholder='Enter balance'
-                        className='flex-1 sm:w-32 h-9 px-2 sm:px-3 text-sm border border-gray-300 rounded bg-white focus:outline-none focus:ring-2 focus:ring-blue-500'
+                        className='flex-1 sm:w-32 h-9 px-2 sm:px-3 text-sm border border-border rounded bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring'
                         autoFocus
                       />
                     </div>
@@ -492,14 +499,14 @@ export default function ExpenseForm({
                         size='sm'
                         onClick={handleBalanceSave}
                         disabled={savingBalance || !tempBalance.trim()}
-                        className='flex-1 sm:flex-none h-9 px-3 sm:px-4 bg-black text-white hover:bg-gray-800 text-xs sm:text-sm'>
+                        className='flex-1 sm:flex-none h-9 px-3 sm:px-4 bg-primary text-primary-foreground hover:bg-primary/90 text-xs sm:text-sm'>
                         {savingBalance ? 'Saving...' : 'Save'}
                       </Button>
                       <Button
                         size='sm'
                         variant='outline'
                         onClick={handleBalanceCancel}
-                        className='flex-1 sm:flex-none h-9 px-3 sm:px-4 text-xs sm:text-sm'>
+                        className='flex-1 sm:flex-none h-9 px-3 sm:px-4 text-xs sm:text-sm border-border text-foreground hover:bg-muted'>
                         Cancel
                       </Button>
                     </div>
@@ -514,7 +521,7 @@ export default function ExpenseForm({
                           (startingBalance || 0) - Object.values(totals).reduce(
                             (sum, cat) => sum + Object.values(cat).reduce((a, b) => a + b, 0),
                             0
-                          ) >= 0 ? 'text-green-600' : 'text-red-600'
+                          ) >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
                         }`}>
                           ₹{((startingBalance || 0) - Object.values(totals).reduce(
                             (sum, cat) => sum + Object.values(cat).reduce((a, b) => a + b, 0),
@@ -533,7 +540,7 @@ export default function ExpenseForm({
                       </div>
                       <div className='flex flex-col sm:flex-row sm:items-center sm:gap-1 w-fit'>
                         <span className='text-xs text-muted-foreground'>Balance:</span>
-                        <span className='text-sm font-semibold'>₹{startingBalance?.toFixed(2) || '0.00'}</span>
+                        <span className='text-sm font-semibold text-foreground'>₹{startingBalance?.toFixed(2) || '0.00'}</span>
                       </div>
                     </div>
                     {/* Edit button - positioned on the right */}
@@ -541,7 +548,7 @@ export default function ExpenseForm({
                       size='sm'
                       variant='outline'
                       onClick={handleBalanceEdit}
-                      className='h-8 w-8 p-0 hover:bg-primary hover:text-primary-foreground flex-shrink-0 self-end sm:self-auto'>
+                      className='h-8 w-8 p-0 hover:bg-primary hover:text-primary-foreground flex-shrink-0 self-end sm:self-auto border-border text-foreground'>
                       <Pencil className='h-4 w-4' />
                     </Button>
                   </div>

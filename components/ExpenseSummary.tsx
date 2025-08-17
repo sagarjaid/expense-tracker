@@ -728,7 +728,7 @@ export default function ExpenseSummary() {
                             
                             {/* Expanded expenses table */}
                             {isExpanded && (
-                              <div className='ml-6 mt-2 mb-4 border-l-2 border-muted'>
+                              <div className='ml-6 mt-2 mb-4 border-muted'>
                                 {isLoading ? (
                                   <div className='text-center py-4 text-sm '>
                                     Loading expenses...

@@ -156,7 +156,7 @@ export default function StartingBalance({
   };
 
   if (loading) {
-    return <div className='text-center py-4'>Loading balance...</div>;
+    return <div className='text-center py-4 text-foreground'>Loading balance...</div>;
   }
 
   return (
@@ -164,7 +164,7 @@ export default function StartingBalance({
       <CardContent className='p-4'>
         <div className='flex items-center gap-4'>
           <div className='flex-1'>
-            <label className='block text-sm font-medium mb-1'>
+            <label className='block text-sm font-medium mb-1 text-foreground'>
               Starting Balance for{' '}
               {format(new Date(selectedYear, selectedMonth), 'MMMM yyyy')}
             </label>
@@ -179,7 +179,7 @@ export default function StartingBalance({
                 className='w-full'
               />
             ) : (
-              <div className='text-lg font-semibold'>
+              <div className='text-lg font-semibold text-foreground'>
                 ₹{balance !== null ? balance.toFixed(2) : ''}
               </div>
             )}

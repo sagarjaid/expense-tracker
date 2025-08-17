@@ -137,11 +137,10 @@ export default function FloatingActionButton({ onExpenseAdded }: FloatingActionB
         <Button
           onClick={handleButtonClick}
           size='icon'
-          className='w-16 h-16 rounded-full shadow-2xl bg-blue-600 hover:bg-blue-700 text-white border-2 border-white transition-all duration-200 hover:scale-110'
+          className='w-16 h-16 rounded-full shadow-2xl bg-primary hover:bg-primary/80 text-primary-foreground transition-all duration-200 drop-shadow-lg'
           style={{ 
             minWidth: '64px', 
             minHeight: '64px',
-            boxShadow: '0 10px 25px rgba(0, 0, 0, 0.3)',
             position: 'relative',
             zIndex: 9999
           }}

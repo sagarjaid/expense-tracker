@@ -1,26 +1,33 @@
 /** @format */
 
-'use client';
-import React, { useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { Button } from '@/components/ui/button';
-import { format, parse } from 'date-fns';
-import { Download } from 'lucide-react';
+"use client";
+import React, { useState } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { Button } from "@/components/ui/button";
+import { format, parse } from "date-fns";
+import { Download, RefreshCw } from "lucide-react";
 
 function toCSV(rows: any[]) {
-  if (!rows.length) return '';
+  if (!rows.length) return "";
 
   // Log raw data to see what we're getting
-  console.log('Raw data from DB:', rows);
+  console.log("Raw data from DB:", rows);
 
   // Define the headers in the desired order
-  const headers = ['date', 'category', 'subcategory', 'description', 'source', 'amount'];
+  const headers = [
+    "date",
+    "category",
+    "subcategory",
+    "description",
+    "source",
+    "amount",
+  ];
 
   // Sort rows by date first
   const sortedRows = [...rows].sort((a, b) => {
     // Parse dates for proper comparison
-    const dateA = parse(a.date, 'yyyy-MM-dd', new Date());
-    const dateB = parse(b.date, 'yyyy-MM-dd', new Date());
+    const dateA = parse(a.date, "yyyy-MM-dd", new Date());
+    const dateB = parse(b.date, "yyyy-MM-dd", new Date());
     return dateA.getTime() - dateB.getTime();
   });
 
@@ -29,22 +36,22 @@ function toCSV(rows: any[]) {
     return headers
       .map((header) => {
         // Handle date formatting
-        if (header === 'date') {
+        if (header === "date") {
           // Parse the date from yyyy-MM-dd and format to dd-MM-yyyy
-          const date = parse(row[header], 'yyyy-MM-dd', new Date());
-          return format(date, 'dd-MMMM-yyyy');
+          const date = parse(row[header], "yyyy-MM-dd", new Date());
+          return format(date, "dd-MMMM-yyyy");
         }
         // Format amount with 2 decimal places
-        if (header === 'amount') {
+        if (header === "amount") {
           return Number(row[header]).toFixed(2);
         }
         // For other fields, just return the value
-        return JSON.stringify(row[header] ?? '');
+        return JSON.stringify(row[header] ?? "");
       })
-      .join(',');
+      .join(",");
   });
 
-  return [headers.join(','), ...csvRows].join('\n');
+  return [headers.join(","), ...csvRows].join("\n");
 }
 
 export default function ExportCSVButton() {
@@ -59,26 +66,26 @@ export default function ExportCSVButton() {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) {
-      setError('User not authenticated.');
+      setError("User not authenticated.");
       setLoading(false);
       return;
     }
     const { data, error } = await supabase
-      .from('expenses')
-      .select('date, category, subcategory, description, source, amount')
-      .eq('user_id', user.id);
+      .from("expenses")
+      .select("date, category, subcategory, description, source, amount")
+      .eq("user_id", user.id);
     if (error || !data) {
-      setError('Failed to fetch expenses.');
+      setError("Failed to fetch expenses.");
       setLoading(false);
       return;
     }
-    console.log('Data from Supabase:', data); // Log the data right after fetching
+    console.log("Data from Supabase:", data); // Log the data right after fetching
     const csv = toCSV(data);
-    const blob = new Blob([csv], { type: 'text/csv' });
+    const blob = new Blob([csv], { type: "text/csv" });
     const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
-    a.download = 'expenses.csv';
+    a.download = "expenses.csv";
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -91,12 +98,17 @@ export default function ExportCSVButton() {
       <Button
         onClick={handleExport}
         disabled={loading}
-        variant='outline'
-        size='sm'
-        className='h-8 px-2'>
-        <Download className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} />
+        variant="outline"
+        size="sm"
+        className="h-8 px-2"
+      >
+        {loading ? (
+          <RefreshCw className="h-3 w-3 animate-[spin_10s_linear_infinite]" />
+        ) : (
+          <Download className="h-3 w-3" />
+        )}
       </Button>
-      {error && <div className='text-sm text-red-500 mt-2'>{error}</div>}
+      {error && <div className="text-sm text-red-500 mt-2">{error}</div>}
     </div>
   );
 }

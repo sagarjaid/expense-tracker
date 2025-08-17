@@ -78,7 +78,7 @@ export default function BalanceSummaryBar({
         <div className='text-xs text-muted-foreground mb-0.5'>
           Balance
         </div>
-        <div className='text-lg font-bold'>
+        <div className='text-lg font-bold text-foreground'>
           ₹
           {typeof startingBalance === 'number' && !isNaN(startingBalance)
             ? startingBalance.toFixed(2)
@@ -87,13 +87,13 @@ export default function BalanceSummaryBar({
       </div>
       <div className='flex-1 '>
         <div className='text-xs text-muted-foreground mb-0.5'>Total Spent</div>
-        <div className='text-lg font-bold'>₹{totalSpent.toFixed(2)}</div>
+        <div className='text-lg font-bold text-foreground'>₹{totalSpent.toFixed(2)}</div>
       </div>
       <div className='flex-1 '>
         <div className='text-xs text-muted-foreground mb-0.5'>
           Remaining Balance
         </div>
-        <div className='text-lg font-bold'>
+        <div className='text-lg font-bold text-foreground'>
           ₹
           {typeof startingBalance === 'number' && !isNaN(startingBalance)
             ? (startingBalance - totalSpent).toFixed(2)

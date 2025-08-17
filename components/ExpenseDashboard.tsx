@@ -104,8 +104,8 @@ const MainCategoryTooltip = ({ active, payload, label }: any) => {
       0
     );
     return (
-      <div className='bg-white p-4 border rounded-lg shadow-lg'>
-        <p className='font-medium mb-2'>Date: {label}</p>
+      <div className='bg-popover p-4 border border-border rounded-lg shadow-lg'>
+        <p className='font-medium mb-2 text-popover-foreground'>Date: {label}</p>
         {payload.map((p: any) => (
           <p
             key={p.name}
@@ -114,8 +114,8 @@ const MainCategoryTooltip = ({ active, payload, label }: any) => {
             {p.name}: ₹{p.value.toFixed(2)}
           </p>
         ))}
-        <hr className='my-2' />
-        <p className='font-medium'>Total: ₹ {total.toFixed(2)}</p>
+        <hr className='my-2 border-border' />
+        <p className='font-medium text-popover-foreground'>Total: ₹ {total.toFixed(2)}</p>
       </div>
     );
   }
@@ -172,8 +172,7 @@ const ExpenseDashboard = React.forwardRef<{ refresh: () => void }, {}>((props, r
   // Sorting state
   const [sortField, setSortField] = useState<'date' | 'category' | 'subcategory' | 'amount' | 'source'>('date');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
-
-
+  const [hideZero, setHideZero] = useState(false);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -582,7 +581,7 @@ const ExpenseDashboard = React.forwardRef<{ refresh: () => void }, {}>((props, r
   // Tab UI
   const tabClass = (tab: 'list' | 'summary') =>
     `px-4 py-2 rounded-t-md text-sm cursor-pointer ${
-      activeTab === tab ? 'border border-b-0 font-medium' : 'border-gray-200'
+      activeTab === tab ? 'border border-b-0 font-medium border-border' : 'border-border'
     }`;
 
   // Expose refresh method to parent component
@@ -618,9 +617,9 @@ const ExpenseDashboard = React.forwardRef<{ refresh: () => void }, {}>((props, r
           <div className='flex items-center gap-2'>
             {/* Average per day calculation */}
             {startDate && endDate && (
-              <div className='text-sm px-2 py-1 border border-gray-200 rounded-md'>
+              <div className='text-sm px-2 py-1 border border-border rounded-md bg-background text-foreground'>
                 Avg/day: ₹
-                <span className='font-bold'>
+                <span className='font-bold text-foreground'>
                 {(() => {
                   const totalAmount = expenses
                     .filter(exp => exp.category === 'Needs' || exp.category === 'Wants')
@@ -635,7 +634,7 @@ const ExpenseDashboard = React.forwardRef<{ refresh: () => void }, {}>((props, r
             {activeTab === 'list' && (
               <>
                 <select
-                  className='w-24 h-8 rounded-md border px-2 py-1 text-sm bg-transparent'
+                  className='w-24 h-8 rounded-md border px-2 py-1 text-sm bg-transparent text-foreground border-border'
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}>
                   {categories.map((cat) => (
@@ -646,7 +645,7 @@ const ExpenseDashboard = React.forwardRef<{ refresh: () => void }, {}>((props, r
                 </select>
                                   {category !== 'All' && (
                     <select
-                      className='w-28 h-8 rounded-md border px-2 py-1 text-sm bg-transparent'
+                      className='w-28 h-8 rounded-md border px-2 py-1 text-sm bg-transparent text-foreground border-border'
                       value={subcategory}
                       onChange={(e) => setSubcategory(e.target.value)}>
                       <option value=''>All Subcategories</option>
@@ -658,6 +657,15 @@ const ExpenseDashboard = React.forwardRef<{ refresh: () => void }, {}>((props, r
                     </select>
                   )}
               </>
+            )}
+            {activeTab === 'summary' && (
+              <Button
+                variant={hideZero ? 'default' : 'outline'}
+                size='sm'
+                onClick={() => setHideZero(!hideZero)}
+                className='h-8 px-3'>
+                {hideZero ? 'Show All' : 'Hide Zero'}
+              </Button>
             )}
             <ExportCSVButton />
             <Button
@@ -675,10 +683,13 @@ const ExpenseDashboard = React.forwardRef<{ refresh: () => void }, {}>((props, r
       </CardHeader>
             <CardContent className='pt-0'>
         {/* Tabs */}
-        <div className='flex border-b'>
+        <div className='flex border-b border-border'>
           <div
             className={tabClass('list')}
-            onClick={() => setActiveTab('list')}>
+            onClick={() => {
+              setActiveTab('list');
+              setHideZero(false);
+            }}>
             Recent Expenses
           </div>
           <div
@@ -691,28 +702,28 @@ const ExpenseDashboard = React.forwardRef<{ refresh: () => void }, {}>((props, r
 
 
         {loading ? (
-          <div className='text-center py-8'>Loading...</div>
+          <div className='text-center py-8 text-foreground'>Loading...</div>
         ) : (
           <>
             {/* Recent Expenses Tab */}
             {activeTab === 'list' && (
-              <div className='mt-4 space-y-6'>
+              <div className='space-y-6'>
                 {/* Daily Trend Chart */}
-                <div className='h-[300px] mb-6 pb-4 border-b border-x'>
+                <div className='h-[300px] mb-6 pb-4 border-b border-x border-border'>
                   <ResponsiveContainer width='100%' height='100%'>
                     <BarChart
                       data={mainCatChartData}
                       margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                      <CartesianGrid strokeDasharray='3 3' />
+                      <CartesianGrid strokeDasharray='3 3' stroke="hsl(var(--border))" />
                       <XAxis
                         dataKey='date'
-                        tick={{ fontSize: 12 }}
+                        tick={{ fontSize: 12, fill: 'hsl(var(--foreground))' }}
                         angle={-45}
                         textAnchor='end'
                         height={60}
                       />
                       <YAxis
-                        tick={{ fontSize: 12 }}
+                        tick={{ fontSize: 12, fill: 'hsl(var(--foreground))' }}
                         tickFormatter={(value) => `₹${value}`}
                       />
                       <Tooltip content={<MainCategoryTooltip />} />
@@ -730,7 +741,7 @@ const ExpenseDashboard = React.forwardRef<{ refresh: () => void }, {}>((props, r
                             id: cat,
                           };
                         })}
-                        wrapperStyle={{ fontSize: '11px' }}
+                        wrapperStyle={{ fontSize: '11px', color: 'hsl(var(--foreground))' }}
                       />
                       {mainCategories.map((category) => (
                         <Bar
@@ -747,14 +758,14 @@ const ExpenseDashboard = React.forwardRef<{ refresh: () => void }, {}>((props, r
 
                 {/* Expenses Table */}
                 {expenses.length === 0 ? (
-                  <div className='text-center py-8'>No expenses found.</div>
+                  <div className='text-center py-8 text-foreground'>No expenses found.</div>
                 ) : (
                   <div className='overflow-x-auto'>
                     <table className='min-w-full text-sm'>
                       <thead>
-                        <tr className='border'>
+                        <tr className='border border-border'>
                           <th 
-                            className='px-3 py-2 text-left whitespace-nowrap cursor-pointer hover:bg-muted/50 select-none'
+                            className='px-3 py-2 text-left whitespace-nowrap cursor-pointer hover:bg-muted/50 select-none text-foreground'
                             onClick={() => handleSort('date')}
                           >
                             <div className='flex items-center gap-1'>
@@ -767,7 +778,7 @@ const ExpenseDashboard = React.forwardRef<{ refresh: () => void }, {}>((props, r
                             </div>
                           </th>
                           <th 
-                            className='px-3 py-2 text-left whitespace-nowrap cursor-pointer hover:bg-muted/50 select-none'
+                            className='px-3 py-2 text-left whitespace-nowrap cursor-pointer hover:bg-muted/50 select-none text-foreground'
                             onClick={() => handleSort('category')}
                           >
                             <div className='flex items-center gap-1'>
@@ -780,7 +791,7 @@ const ExpenseDashboard = React.forwardRef<{ refresh: () => void }, {}>((props, r
                             </div>
                           </th>
                           <th 
-                            className='px-3 py-2 text-left whitespace-nowrap cursor-pointer hover:bg-muted/50 select-none'
+                            className='px-3 py-2 text-left whitespace-nowrap cursor-pointer hover:bg-muted/50 select-none text-foreground'
                             onClick={() => handleSort('subcategory')}
                           >
                             <div className='flex items-center gap-1'>
@@ -792,9 +803,9 @@ const ExpenseDashboard = React.forwardRef<{ refresh: () => void }, {}>((props, r
                               )}
                             </div>
                           </th>
-                          <th className='px-3 py-2 text-left whitespace-nowrap'>Description</th>
+                          <th className='px-3 py-2 text-left whitespace-nowrap text-text-soft'>Description</th>
                           <th 
-                            className='px-3 py-2 text-left whitespace-nowrap cursor-pointer hover:bg-muted/50 select-none'
+                            className='px-3 py-2 text-left whitespace-nowrap cursor-pointer hover:bg-muted/50 select-none text-text-soft'
                             onClick={() => handleSort('source')}
                           >
                             <div className='flex items-center gap-1'>
@@ -807,7 +818,7 @@ const ExpenseDashboard = React.forwardRef<{ refresh: () => void }, {}>((props, r
                             </div>
                           </th>
                           <th 
-                            className='px-3 py-2 text-left whitespace-nowrap cursor-pointer hover:bg-muted/50 select-none'
+                            className='px-3 py-2 text-left whitespace-nowrap cursor-pointer hover:bg-muted/50 select-none text-text-soft'
                             onClick={() => handleSort('amount')}
                           >
                             <div className='flex items-center gap-1'>
@@ -819,25 +830,25 @@ const ExpenseDashboard = React.forwardRef<{ refresh: () => void }, {}>((props, r
                               )}
                             </div>
                           </th>
-                          <th className='px-3 py-2 text-center whitespace-nowrap'>Delete</th>
-                          <th className='px-3 py-2 text-center whitespace-nowrap'>Edit</th>
+                          <th className='px-3 py-2 text-center whitespace-nowrap text-text-soft'>Delete</th>
+                          <th className='px-3 py-2 text-center whitespace-nowrap text-text-soft'>Edit</th>
                         </tr>
                       </thead>
                       <tbody>
                         {sortedExpenses.map((exp) => (
-                          <tr key={exp.id} className='border hover:bg-muted/30'>
-                            <td className='p-3 whitespace-nowrap'>
+                          <tr key={exp.id} className='border border-border hover:bg-muted/30'>
+                            <td className='p-3 whitespace-nowrap text-foreground'>
                               {exp.date
                                 ? format(new Date(exp.date + 'T00:00:00'), 'dd/MM/yyyy')
                                 : ''}
                             </td>
-                            <td className='px-3 py-2 whitespace-nowrap'>{exp.category}</td>
-                            <td className='px-3 py-2 whitespace-nowrap'>{exp.subcategory}</td>
-                            <td className='px-3 py-2 whitespace-nowrap'>
+                            <td className='px-3 py-2 whitespace-nowrap text-foreground'>{exp.category}</td>
+                            <td className='px-3 py-2 whitespace-nowrap text-text-soft'>{exp.subcategory}</td>
+                            <td className='px-3 py-2 whitespace-nowrap text-text-soft'>
                               {exp.description?.trim() ? exp.description : 'NA'}
                             </td>
-                            <td className='px-3 py-2 whitespace-nowrap'>{exp.source || 'Bank A/C'}</td>
-                            <td className='px-3 py-2 whitespace-nowrap'>
+                            <td className='px-3 py-2 whitespace-nowrap text-text-soft'>{exp.source || 'Bank A/C'}</td>
+                            <td className='px-3 py-2 whitespace-nowrap text-foreground'>
                               {Number(exp.amount).toFixed(2)}
                             </td>
                             <td className='px-3 py-2 text-center whitespace-nowrap'>
@@ -874,9 +885,9 @@ const ExpenseDashboard = React.forwardRef<{ refresh: () => void }, {}>((props, r
 
             {/* Summary Tab */}
             {activeTab === 'summary' && (
-              <div className='mt-4 space-y-6'>
+              <div className='space-y-6'>
                 {/* Category Split Chart */}
-                <div className='h-[250px] mb-6 flex items-center justify-center'>
+                <div className='h-[300px] pt-4  mb-6 flex items-center justify-center border border-t-0 border-border'>
                   <ResponsiveContainer width='100%' height='100%'>
                     <PieChart>
                       <Pie
@@ -900,9 +911,11 @@ const ExpenseDashboard = React.forwardRef<{ refresh: () => void }, {}>((props, r
                 {/* Category Breakdown */}
                 {mainCategories.map((cat) => (
                   <div key={cat} className=''>
-                    <div className='text-lg font-semibold mb-2'>{cat}</div>
+                    <div className='text-lg font-semibold mb-2 text-foreground'>{cat}</div>
                     <div className='grid grid-cols-1 gap-2'>
-                      {mergedSubcategoriesRef.current[cat].map((subcat: string) => {
+                      {mergedSubcategoriesRef.current[cat]
+                        .filter(subcat => !hideZero || (totals[cat]?.[subcat] || 0) > 0)
+                        .map((subcat: string) => {
                         const key = `${cat}-${subcat}`;
                         const isExpanded = expandedSubcategories[key];
                         const expenses = detailedExpenses[key] || [];
@@ -911,7 +924,7 @@ const ExpenseDashboard = React.forwardRef<{ refresh: () => void }, {}>((props, r
                         return (
                           <div key={subcat}>
                             <div
-                              className='flex justify-between py-1 cursor-pointer hover:bg-muted/50'
+                              className='flex justify-between py-1 cursor-pointer hover:bg-muted/50 text-text-soft'
                               onClick={() => toggleSubcategory(cat, subcat)}>
                               <div className='flex items-center gap-2'>
                                 {isExpanded ? (
@@ -921,42 +934,42 @@ const ExpenseDashboard = React.forwardRef<{ refresh: () => void }, {}>((props, r
                                 )}
                                 <span>{subcat}</span>
                               </div>
-                              <span className='text-sm'>
+                              <span className='text-sm text-foreground'>
                                 ₹{totals[cat]?.[subcat]?.toFixed(2) || '0.00'}
                               </span>
                             </div>
                             
                             {isExpanded && (
-                              <div className='ml-6 mt-2 mb-4 border-l-2 border-muted'>
+                              <div className='ml-6 mt-2 mb-4 border-muted'>
                                 {isLoading ? (
-                                  <div className='text-center py-4 text-sm'>Loading expenses...</div>
+                                  <div className='text-center py-4 text-sm text-foreground'>Loading expenses...</div>
                                 ) : expenses.length === 0 ? (
-                                  <div className='text-center py-4 text-sm'>No expenses found for this subcategory</div>
+                                  <div className='text-center py-4 text-sm text-foreground'>No expenses found for this subcategory</div>
                                 ) : (
-                                  <div className='overflow-x-auto border rounded-md'>
+                                  <div className='overflow-x-auto border rounded-md border-border'>
                                     <table className='w-full text-sm'>
                                       <thead>
-                                        <tr className='bg-muted/50 border-b'>
-                                          <th className='px-4 py-3 text-left font-medium'>Date</th>
-                                          <th className='px-4 py-3 text-left font-medium'>Description</th>
-                                          <th className='px-3 py-3 text-left font-medium'>Source</th>
-                                          <th className='px-3 py-3 text-center font-medium w-12'>Delete</th>
-                                          <th className='px-3 py-3 text-center font-medium w-12'>Edit</th>
-                                          <th className='px-3 py-3 text-right font-medium w-[140px]'>Amount</th>
+                                        <tr className='bg-muted/50 border-b border-border'>
+                                          <th className='px-4 py-3 text-left font-medium text-foreground'>Date</th>
+                                          <th className='px-4 py-3 text-left font-medium text-foreground'>Description</th>
+                                          <th className='px-3 py-3 text-left font-medium text-foreground'>Source</th>
+                                          <th className='px-3 py-3 text-center font-medium w-12 text-foreground'>Delete</th>
+                                          <th className='px-3 py-3 text-center font-medium w-12 text-foreground'>Edit</th>
+                                          <th className='px-3 py-3 text-right font-medium w-[140px] text-foreground'>Amount</th>
                                         </tr>
                                       </thead>
                                       <tbody>
                                         {expenses.map((exp) => (
-                                          <tr key={exp.id} className='border-b hover:bg-muted/20 transition-colors'>
-                                            <td className='px-4 py-3 whitespace-nowrap font-medium'>
+                                          <tr key={exp.id} className='border-b border-border hover:bg-muted/20 transition-colors'>
+                                            <td className='px-4 py-3 whitespace-nowrap font-medium text-foreground'>
                                               {exp.date
                                                 ? format(new Date(exp.date + 'T00:00:00'), 'dd/MM/yyyy')
                                                 : ''}
                                             </td>
-                                            <td className='px-4 py-3 max-w-xs truncate'>
+                                            <td className='px-4 py-3 max-w-xs truncate text-foreground'>
                                               {exp.description?.trim() ? exp.description : 'NA'}
                                             </td>
-                                            <td className='px-3 py-3 whitespace-nowrap'>{exp.source || 'Bank A/C'}</td>
+                                            <td className='px-3 py-3 whitespace-nowrap text-foreground'>{exp.source || 'Bank A/C'}</td>
                                             <td className='px-3 py-3 text-center'>
                                               <Button
                                                 variant='ghost'
@@ -986,7 +999,7 @@ const ExpenseDashboard = React.forwardRef<{ refresh: () => void }, {}>((props, r
                                                 <Pencil className='h-3.5 w-3.5' />
                                               </Button>
                                             </td>
-                                            <td className='px-3 py-3 text-right font-medium'>
+                                            <td className='px-3 py-3 text-right font-medium text-foreground'>
                                               ₹{Number(exp.amount).toFixed(2)}
                                             </td>
                                           </tr>
@@ -995,12 +1008,12 @@ const ExpenseDashboard = React.forwardRef<{ refresh: () => void }, {}>((props, r
                                       {expenses.length > 2 && (
                                         <tfoot>
                                           <tr className='border-t-2 border-muted bg-muted/50'>
-                                            <td className='px-4 py-3 font-semibold'>Total</td>
+                                            <td className='px-4 py-3 font-semibold text-foreground'>Total</td>
                                             <td className='px-4 py-3'></td>
                                             <td className='px-3 py-3'></td>
                                             <td className='px-3 py-3'></td>
                                             <td className='px-3 py-3'></td>
-                                            <td className='px-3 py-3 text-right font-semibold'>
+                                            <td className='px-3 py-3 text-right font-semibold text-foreground'>
                                               ₹{expenses.reduce((sum, exp) => sum + Number(exp.amount), 0).toFixed(2)}
                                             </td>
                                           </tr>
@@ -1015,29 +1028,29 @@ const ExpenseDashboard = React.forwardRef<{ refresh: () => void }, {}>((props, r
                         );
                       })}
                     </div>
-                    <div className='mt-2 font-medium text-sm text-right'>
+                    <div className='mt-2 font-medium text-sm text-right text-text-soft'>
                       Total: ₹
-                      {Object.values(totals[cat] || {})
-                        .reduce((a, b) => a + b, 0)
+                      {mergedSubcategoriesRef.current[cat]
+                        .filter(subcat => !hideZero || (totals[cat]?.[subcat] || 0) > 0)
+                        .reduce((sum, subcat) => sum + (totals[cat]?.[subcat] || 0), 0)
                         .toFixed(2)}
                     </div>
                   </div>
                 ))}
 
                 {/* Grand Total Section */}
-                <div className='mt-8 pt-4 border-t-2 border-gray-200'>
+                <div className='mt-8 pt-4 border-t-2 border-border'>
                   <div className='flex justify-between items-center'>
-                    <div className='text-lg font-bold'>Grand Total</div>
-                    <div className='text-lg font-bold'>
+                    <div className='text-lg font-bold text-foreground'>Grand Total</div>
+                    <div className='text-lg font-bold text-foreground'>
                       ₹
                       {mainCategories
                         .reduce(
                           (sum, cat) =>
                             sum +
-                            Object.values(totals[cat] || {}).reduce(
-                              (a, b) => a + b,
-                              0
-                            ),
+                            mergedSubcategoriesRef.current[cat]
+                              .filter(subcat => !hideZero || (totals[cat]?.[subcat] || 0) > 0)
+                              .reduce((a, subcat) => a + (totals[cat]?.[subcat] || 0), 0),
                           0
                         )
                         .toFixed(2)}

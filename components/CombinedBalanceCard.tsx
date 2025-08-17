@@ -233,7 +233,7 @@ export default function CombinedBalanceCard({
                 </Button>
               </div>
             ) : (
-              <div className='text-xl font-bold'>
+              <div className='text-xl font-bold text-foreground'>
                 ₹{balance !== null ? balance.toFixed(2) : '0.00'}
               </div>
             )}
@@ -249,7 +249,7 @@ export default function CombinedBalanceCard({
             </div>
             <div className='text-left'>
               <div className='text-xs text-muted-foreground mb-1'>Remaining</div>
-              <div className={`text-lg font-semibold ${remainingBalance >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+              <div className={`text-lg font-semibold ${remainingBalance >= 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
                 ₹{remainingBalance.toFixed(2)}
               </div>
             </div>

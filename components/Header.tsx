@@ -26,7 +26,7 @@ export default function Header() {
   }, [menuOpen]);
 
   return (
-    <header className='w-full z-50 bg-background py-2 pt-4 text-foreground'>
+    <header className='w-full z-50 bg-background p-4 text-foreground'>
       <div className='max-w-2xl mx-auto flex flex-row items-center justify-between gap-2 relative'>
         <Logo />
         {/* Desktop menu */}
