@@ -54,7 +54,15 @@ function toCSV(rows: any[]) {
   return [headers.join(","), ...csvRows].join("\n");
 }
 
-export default function ExportCSVButton() {
+interface ExportCSVButtonProps {
+  startDate?: Date;
+  endDate?: Date;
+}
+
+export default function ExportCSVButton({
+  startDate,
+  endDate,
+}: ExportCSVButtonProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -70,10 +78,21 @@ export default function ExportCSVButton() {
       setLoading(false);
       return;
     }
-    const { data, error } = await supabase
+    let query = supabase
       .from("expenses")
       .select("date, category, subcategory, description, source, amount")
       .eq("user_id", user.id);
+    
+    if (startDate) {
+      const startDateStr = format(startDate, "yyyy-MM-dd");
+      query = query.gte("date", startDateStr);
+    }
+    if (endDate) {
+      const endDateStr = format(endDate, "yyyy-MM-dd");
+      query = query.lte("date", endDateStr);
+    }
+    
+    const { data, error } = await query;
     if (error || !data) {
       setError("Failed to fetch expenses.");
       setLoading(false);

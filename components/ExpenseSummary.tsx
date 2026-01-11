@@ -578,7 +578,7 @@ export default function ExpenseSummary() {
             </select>
           </div>
           <div className='flex items-center gap-2'>
-            <ExportCSVButton />
+            <ExportCSVButton startDate={startDate} endDate={endDate} />
             <Button
               variant='outline'
               size='sm'

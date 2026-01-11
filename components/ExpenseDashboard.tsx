@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DateRangePicker } from "@/components/ui/date-range-picker-new";
 import { Button } from "@/components/ui/button";
 import { format, eachDayOfInterval, isSameDay } from "date-fns";
+import { useRouter } from "next/navigation";
 
 import {
   CalendarIcon,
@@ -17,6 +18,7 @@ import {
   ChevronRight,
   ChevronUp,
   ChevronDown as ChevronDownIcon,
+  Upload,
 } from "lucide-react";
 import {
   BarChart,
@@ -130,6 +132,7 @@ const MainCategoryTooltip = ({ active, payload, label }: any) => {
 
 const ExpenseDashboard = React.forwardRef<{ refresh: () => void }, {}>(
   (props, ref) => {
+    const router = useRouter();
     const now = new Date();
     const { first: defaultStart, last: defaultEnd } = getFirstAndLastDayOfMonth(
       now.getFullYear(),
@@ -699,7 +702,17 @@ const ExpenseDashboard = React.forwardRef<{ refresh: () => void }, {}>(
                   {hideZero ? "Show All" : "Hide Zero"}
                 </Button>
               )}
-              <ExportCSVButton />
+
+              <ExportCSVButton startDate={startDate} endDate={endDate} />
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => router.push("/upload")}
+                className="h-8 px-2"
+              >
+                <Upload className="h-3 w-3" />
+              </Button>
+
               <Button
                 variant="outline"
                 size="sm"
